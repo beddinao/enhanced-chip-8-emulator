@@ -33,7 +33,8 @@ bool init_window(worker_data *worker) {
 		return false;
 	}
 	win = SDL_CreateWindow("chip 8 emu", DEF_WIN_WIDTH, DEF_WIN_HEIGHT, SDL_WINDOW_RESIZABLE);
-	if (!win || !(renderer = SDL_CreateRenderer(win, NULL))) {
+	renderer = SDL_CreateRenderer(win, NULL);
+	if (!win || !renderer) {
 		if (win) SDL_DestroyWindow(win);
 		free(worker->win);
 		return false;
@@ -64,7 +65,7 @@ void *draw_routine(void *p) {
 	worker_data *worker = (worker_data*)p;
 	SDL_Event event;
 	bool screen_on = true;
-	while (run) {
+	while (screen_on) {
 		pthread_mutex_lock(&worker->halt_mutex);
 		if (worker->halt) {
 			pthread_mutex_unlock(&worker->halt_mutex);
@@ -85,7 +86,7 @@ void *draw_routine(void *p) {
 		}
 	}
 	pthread_mutex_lock(&worker->halt_mutex);
-	4worker->halt = true;
+	worker->halt = true;
 	pthread_mutex_unlock(&worker->halt_mutex);
 	return NULL;
 }
@@ -103,7 +104,7 @@ void instruction_cycle(void *p, void *p2) {
 	}
 }
 
-int main() {
+int main(int c, char **v) {
 	chip_8 *chip8 = init_chip8();
 	if (!chip8)
 		return 1;
