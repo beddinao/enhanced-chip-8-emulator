@@ -1,3 +1,4 @@
+
 #include <chip8.h>
 
 void load_fonts(chip_8 *chip8) {
@@ -58,6 +59,7 @@ bool load_prg(chip_8 *chip8, char *prg) {
 	FILE *file = fopen(prg, "rb");
 	if (!file) return false;
 	memset(buffer, 0, sizeof(buffer));
+	printf("DUMPING (%s):\n", prg);
 	while((chars_read = fread(buffer, 1, sizeof(buffer), file))) {
 		if (chars_read + chip8->mem_ocu > RAM_SIZE - PRG_LOAD) {
 			fclose(file);
@@ -65,11 +67,14 @@ bool load_prg(chip_8 *chip8, char *prg) {
 		}
 		memcpy(chip8->ram + PRG_LOAD + chip8->mem_ocu, buffer, chars_read);
 		chip8->mem_ocu += chars_read;
+		for (int i = 0; i < chars_read; i++) printf("%02x ", buffer[i]);
+		printf("\n");
 		memset(buffer, 0, sizeof(buffer));
 	}
 	fclose(file);
 	if (!chip8->mem_ocu)
 		return false;
+	printf("PROGRAM LOADED\n");
 	return true;
 }
 
@@ -78,7 +83,7 @@ chip_8 *init_chip8(char *prg) {
 	if (!chip8)
 		return NULL;
 	memset(chip8, 0, sizeof(chip_8));
-	load_prg(chip8, prg);
+	load_fonts(chip8);
 	chip8->pc = PRG_LOAD;
 	if (!load_prg(chip8, prg)) {
 		free(chip8);
@@ -127,6 +132,9 @@ void instruction_cycle(void *p, void *p2) {
 			break;
 		}
 		pthread_mutex_unlock(&worker->halt_mutex);
+		chip8->opcode = chip8->ram[chip8->pc] << 0x8 | chip8->ram[chip8->pc+1];
+		chip8->pc += 2;
+		printf("%04x ", chip8->opcode);
 	}
 }
 
