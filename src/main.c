@@ -19,28 +19,34 @@ void load_fonts(chip_8 *chip8) {
 		0xf0, 0x80, 0xf0, 0x80, 0xf0, // e
 		0xf0, 0x80, 0xf0, 0x80, 0x80, // f
 	};
-	memcpy(chip8->ram + RAM_START, fonts, sizeof(fonts));
+	memcpy(chip8->ram + FONT_START, fonts, sizeof(fonts));
 }
 
-bool init_window(chip_8 *chip8) {
+bool init_window(worker_data *worker) {
+	worker->win = malloc(sizeof(win));
+	if (!worker->win)
+		return false;
 	SDL_Window *win = NULL;
 	SDL_Renderer *renderer = NULL;
-	if (!SDL_Init(SDL_INIT_EVENTS))
+	if (!SDL_Init(SDL_INIT_EVENTS)) {
+		free(worker->win);
 		return false;
+	}
 	win = SDL_CreateWindow("chip 8 emu", DEF_WIN_WIDTH, DEF_WIN_HEIGHT, SDL_WINDOW_RESIZABLE);
 	if (!win || !(renderer = SDL_CreateRenderer(win, NULL))) {
 		if (win) SDL_DestroyWindow(win);
+		free(worker->win);
 		return false;
 	}
 	SDL_SetWindowMinimumSize(win, MIN_WIN_WIDTH, MIN_WIN_HEIGHT);
-	chip8->win = win;
-	chip8->renderer = renderer;
+	worker->win->window = win;
+	worker->win->renderer = renderer;
 	return true;
 }
 
-void clean_sdl(chip_8 *chip8) {
-	SDL_DestroyWindow(chip8->win);
-	SDL_DestroyRenderer(chip8->renderer);
+void clean_sdl(worker_data *worker) {
+	SDL_DestroyWindow(worker->win->window);
+	SDL_DestroyRenderer(worker->win->renderer);
 	SDL_Quit();	
 }
 
@@ -67,7 +73,7 @@ void *draw_routine(void *p) {
 	return NULL;
 }
 
-void intruction_cycle(void *p) {
+void instruction_cycle(void *p) {
 	chip_8 *chip8 = (chip_8*)p;
 	while (true);
 }
@@ -76,28 +82,33 @@ int main() {
 	chip_8 *chip8 = init_chip8();
 	if (!chip8)
 		return 1;
-	if (!init_window(chip8)) {
-		free(chip8);
-		return 1;
-	}
 	worker_data *worker = malloc(sizeof(worker_data));
 	if (!worker) {
-		clean_sdl(chip8);
 		free(chip8);
 		return 1;
 	}
 	memset(worker, 0, sizeof(worker_data));
-	pthread_mutex_init(&worker->halt_mutex);
-	pthread_mutex_init(&worker->prg_mutex);
+	worker->chip8 = chip8;
+	if (!init_window(worker)) {
+		free(worker);
+		free(chip8);
+		return 1;
+	}
+	pthread_mutex_init(&worker->halt_mutex, NULL);
+	pthread_mutex_init(&worker->prg_mutex, NULL);
 	pthread_create(&worker->worker, NULL, draw_routine, worker);
 	instruction_cycle(chip8);
+	//
 	pthread_mutex_lock(&worker->halt_mutex);
 	worker->halt = true;
 	pthread_mutex_unlock(&worker->halt_mutex);
 	pthread_join(worker->worker, NULL);
-	SDL_DestroyRenderer(chip8->renderer);
-	SDL_DestroyWindow(chip8->win);
+	pthread_mutex_destroy(&worker->halt_mutex);
+	pthread_mutex_destroy(&worker->prg_mutex);
+	SDL_DestroyRenderer(worker->win->renderer);
+	SDL_DestroyWindow(worker->win->window);
 	SDL_Quit();
+	free(worker->win);
 	free(worker);
 	free(chip8);
 }
