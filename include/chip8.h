@@ -22,8 +22,8 @@ typedef struct graphic {
 	SDL_Renderer *renderer;
 	unsigned win_height;
 	unsigned win_width;
-	float wpdx;
-	float wpdy;
+	int wpdx;
+	int wpdy;
 } win;
 
 
@@ -47,6 +47,7 @@ typedef struct chip8 {
 	uint8_t delay_timer;
 	uint8_t sound_timer;
 	uint8_t opcode;
+	unsigned mem_ocu;
 } chip_8;
 
 
