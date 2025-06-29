@@ -44,6 +44,16 @@ void clean_sdl(chip_8 *chip8) {
 	SDL_Quit();	
 }
 
+chip_8 *init_chip8() {
+	chip_8 *chip8 = malloc(sizeof(chip_8));
+	if (!chip8)
+		return NULL;
+	memset(chip8, 0, sizeof(chip_8));
+	load_fonts(chip8);
+	chip8->pc = PRG_LOAD;
+	return chip8;
+}
+
 void *draw_routine(void *p) {
 	worker_data *worker = (worker_data*)p;
 	while (true) {
@@ -57,11 +67,15 @@ void *draw_routine(void *p) {
 	return NULL;
 }
 
+void intruction_cycle(void *p) {
+	chip_8 *chip8 = (chip_8*)p;
+	while (true);
+}
+
 int main() {
-	chip_8 *chip8 = malloc(sizeof(chip_8));
+	chip_8 *chip8 = init_chip8();
 	if (!chip8)
 		return 1;
-	memset(chip8, 0, sizeof(chip_8));
 	if (!init_window(chip8)) {
 		free(chip8);
 		return 1;
