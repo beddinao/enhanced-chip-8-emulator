@@ -63,24 +63,30 @@ chip_8 *init_chip8() {
 void *draw_routine(void *p) {
 	worker_data *worker = (worker_data*)p;
 	SDL_Event event;
-	while (true) {
+	bool screen_on = true;
+	while (run) {
 		pthread_mutex_lock(&worker->halt_mutex);
 		if (worker->halt) {
 			pthread_mutex_unlock(&worker->halt_mutex);
-			break;
+			return NULL;
 		}
 		pthread_mutex_unlock(&worker->halt_mutex);
 		if (SDL_PollEvent(&event)) {
 			switch(event.type) {
 				case SDL_EVENT_QUIT:
-					pthread_mutex_lock(&worker->halt_mutex);
-					worker->halt = true;
-					pthread_mutex_unlock(&worker->halt_mutex);
+					screen_on = false;
+					break;
+				case SDL_EVENT_KEY_DOWN:
+					if (event.key.key == SDLK_ESCAPE)
+						screen_on = false;
 					break;
 				default:	break;
 			}
 		}
 	}
+	pthread_mutex_lock(&worker->halt_mutex);
+	4worker->halt = true;
+	pthread_mutex_unlock(&worker->halt_mutex);
 	return NULL;
 }
 
@@ -118,9 +124,6 @@ int main() {
 	pthread_create(&worker->worker, NULL, draw_routine, worker);
 	instruction_cycle(chip8, worker);
 	//
-	/*pthread_mutex_lock(&worker->halt_mutex);
-	worker->halt = true;
-	pthread_mutex_unlock(&worker->halt_mutex);*/
 	pthread_join(worker->worker, NULL);
 	pthread_mutex_destroy(&worker->halt_mutex);
 	pthread_mutex_destroy(&worker->prg_mutex);
