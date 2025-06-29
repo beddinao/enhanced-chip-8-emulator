@@ -32,19 +32,21 @@ typedef struct worker {
 	pthread_mutex_t prg_mutex;
 	bool halt;
 	win *win;
-} worker;
+	void *chip8;
+} worker_data;
 
 typedef struct chip8 {
 	uint8_t ram[RAM_SIZE];
 	uint8_t regs[16];
-	uint16_t stack[];
+	uint16_t stack[16];
+	uint32_t display[64*32];
 	uint16_t pc;
 	uint16_t ir;
 	uint8_t sp;
 	uint8_t delay_timer;
 	uint8_t sound_timer;
 	uint8_t opcode;
-} chip8;
+} chip_8;
 
 
 
