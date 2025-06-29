@@ -11,7 +11,9 @@
 #define DEF_WIN_HEIGHT 500
 #define MIN_WIN_WIDTH 200
 #define MIN_WIN_HEIGHT 100
-#define RAM_SIZE 4096
+#define RAM_SIZE 0x1000 
+#define FONT_START 0x50
+#define PRG_LOAD 0x200
 
 
 typedef struct graphic {
@@ -35,11 +37,13 @@ typedef struct worker {
 typedef struct chip8 {
 	uint8_t ram[RAM_SIZE];
 	uint8_t regs[16];
+	uint16_t stack[];
 	uint16_t pc;
 	uint16_t ir;
 	uint8_t sp;
 	uint8_t delay_timer;
 	uint8_t sound_timer;
+	uint8_t opcode;
 } chip8;
 
 
