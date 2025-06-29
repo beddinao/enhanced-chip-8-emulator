@@ -62,6 +62,31 @@ chip_8 *init_chip8() {
 
 void *draw_routine(void *p) {
 	worker_data *worker = (worker_data*)p;
+	SDL_Event event;
+	while (true) {
+		pthread_mutex_lock(&worker->halt_mutex);
+		if (worker->halt) {
+			pthread_mutex_unlock(&worker->halt_mutex);
+			break;
+		}
+		pthread_mutex_unlock(&worker->halt_mutex);
+		if (SDL_PollEvent(&event)) {
+			switch(event.type) {
+				case SDL_EVENT_QUIT:
+					pthread_mutex_lock(&worker->halt_mutex);
+					worker->halt = true;
+					pthread_mutex_unlock(&worker->halt_mutex);
+					break;
+				default:	break;
+			}
+		}
+	}
+	return NULL;
+}
+
+void instruction_cycle(void *p, void *p2) {
+	chip_8 *chip8 = (chip_8*)p;
+	worker_data *worker = (worker_data*)p2;
 	while (true) {
 		pthread_mutex_lock(&worker->halt_mutex);
 		if (worker->halt) {
@@ -70,12 +95,6 @@ void *draw_routine(void *p) {
 		}
 		pthread_mutex_unlock(&worker->halt_mutex);
 	}
-	return NULL;
-}
-
-void instruction_cycle(void *p) {
-	chip_8 *chip8 = (chip_8*)p;
-	while (true);
 }
 
 int main() {
@@ -97,11 +116,11 @@ int main() {
 	pthread_mutex_init(&worker->halt_mutex, NULL);
 	pthread_mutex_init(&worker->prg_mutex, NULL);
 	pthread_create(&worker->worker, NULL, draw_routine, worker);
-	instruction_cycle(chip8);
+	instruction_cycle(chip8, worker);
 	//
-	pthread_mutex_lock(&worker->halt_mutex);
+	/*pthread_mutex_lock(&worker->halt_mutex);
 	worker->halt = true;
-	pthread_mutex_unlock(&worker->halt_mutex);
+	pthread_mutex_unlock(&worker->halt_mutex);*/
 	pthread_join(worker->worker, NULL);
 	pthread_mutex_destroy(&worker->halt_mutex);
 	pthread_mutex_destroy(&worker->prg_mutex);
