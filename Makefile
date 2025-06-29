@@ -7,8 +7,8 @@ LDFLAGS = -Llib -Wl,-rpath,lib -Wl,-lSDL3
 SDL_PATH = ./assets/SDL3
 NAME = chip8
 
-#all: dirs_set sdl $(NAME)
-all: $(NAME)
+all: dirs_set sdl $(NAME)
+#all: $(NAME)
 
 sdl:
 	@cmake -B $(SDL_PATH)/build $(SDL_PATH) -DCMAKE_CXX_COMPILER="g++"
