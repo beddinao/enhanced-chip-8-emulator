@@ -1,7 +1,7 @@
 
 # *`enhanced-chip-8-emulator`*
 
-<a href="https://en.wikipedia.org/wiki/CHIP-8">CHIP-8</a> - <a href="https://www.libsdl.org/">SDL3</a>
+<a href="https://en.wikipedia.org/wiki/CHIP-8">CHIP-8</a> - <a href="https://www.libsdl.org/">SDL</a>
 
 ```
 • 64x32 pixel monochrome display.
