@@ -16,7 +16,6 @@
 #define FONT_START 0x50
 #define PRG_LOAD 0x200
 
-
 typedef struct graphic {
 	SDL_Window *window;
 	SDL_Renderer *renderer;
@@ -25,7 +24,6 @@ typedef struct graphic {
 	int wpdx;
 	int wpdy;
 } win;
-
 
 typedef struct worker {
 	pthread_t worker;
@@ -48,8 +46,13 @@ typedef struct chip8 {
 	uint8_t sound_timer;
 	uint16_t opcode;
 	unsigned mem_ocu;
+	void (*_0s_[3])(struct chip8*);
+	void (*_1_7s_[7])(struct chip8*);
+	void (*_8s_[9])(struct chip8*);
+	void (*_9_d_[5])(struct chip8*);
+	void (*_es_[2])(struct chip8*);
+	void (*_fs_[9])(struct chip8*);
 } chip_8;
-
 
 
 #endif
