@@ -46,7 +46,7 @@ typedef struct chip8 {
 	uint8_t sp;
 	uint8_t delay_timer;
 	uint8_t sound_timer;
-	uint8_t opcode;
+	uint16_t opcode;
 	unsigned mem_ocu;
 } chip_8;
 
