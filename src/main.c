@@ -68,13 +68,21 @@ void _8xy4(chip_8 *chip8) {
 void _8xy5(chip_8 *chip8) {
 	printf("8xy5 ");
 	chip8->regs[0xf] = chip8->regs[(chip8->opcode&0x0f00)>>0x8] > chip8->regs[(chip8->opcode&0x00f0)>>0x4];
-	chip8->regs[(chip8->opcode&0x0f00)>0x8] -= chip8->regs[(chip8->opcode&0x00f0)>>0x4];
+	chip8->regs[(chip8->opcode&0x0f00)>>0x8] -= chip8->regs[(chip8->opcode&0x00f0)>>0x4];
 }
 void _8xy6(chip_8 *chip8) {
 	printf("8xy6 ");
+	chip8->regs[0xf] = chip8->regs[(chip8->opcode&0x0f00)>>0x8] & 0x1;
+	chip8->regs[(chip8->opcode&0x0f00)>>0x8] >> 0x1;
 }
-void _8xy7(chip_8 *chip8) { printf("8xy7 "); }
-void _8xye(chip_8 *chip8) { printf("8xye "); }
+void _8xy7(chip_8 *chip8) {
+	printf("8xy7 ");
+	chip8->regs[0xf] = chip8->regs[(chip8->opcode&0x00f0)>>0x4] > chip8->regs[(chip8->opcode&0x0f00)>>0x8];
+	chip8->regs[(chip8->opcode&0x0f00)>>0x8] = chip8->regs[(chip8->opcode&0x00f0)>>0x4] - chip8->regs[(chip8->opcode&0x0f00)>>0x8];
+}
+void _8xye(chip_8 *chip8) {
+	printf("8xye ");
+}
 
 void _9xy0(chip_8 *chip8) { printf("9xy0 "); }
 void _annn(chip_8 *chip8) { printf("annn "); }
