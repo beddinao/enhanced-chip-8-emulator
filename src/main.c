@@ -7,7 +7,7 @@ void _00e0(chip_8 *chip8) {
 }
 void _00ee(chip_8 *chip8) {
 	printf("00ee ");
-	chip->pc = chip8->stack[chip8->sp--];
+	chip8->pc = chip8->stack[chip8->sp--];
 }
 
 void _1nnn(chip_8 *chip8) {
