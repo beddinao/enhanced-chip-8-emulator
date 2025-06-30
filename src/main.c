@@ -73,7 +73,7 @@ void _8xy5(chip_8 *chip8) {
 void _8xy6(chip_8 *chip8) {
 	printf("8xy6 ");
 	chip8->regs[0xf] = chip8->regs[(chip8->opcode&0x0f00)>>0x8] & 0x1;
-	chip8->regs[(chip8->opcode&0x0f00)>>0x8] >> 0x1;
+	chip8->regs[(chip8->opcode&0x0f00)>>0x8] >>= 0x1;
 }
 void _8xy7(chip_8 *chip8) {
 	printf("8xy7 ");
@@ -82,26 +82,61 @@ void _8xy7(chip_8 *chip8) {
 }
 void _8xye(chip_8 *chip8) {
 	printf("8xye ");
+	chip8->regs[0xf] = chip8->regs[(chip8->opcode&0x0f00)>>0x8] & 0x80;
+	chip8->regs[(chip8->opcode&0x0f00)>>0x8] <<= 0x1;
 }
 
-void _9xy0(chip_8 *chip8) { printf("9xy0 "); }
-void _annn(chip_8 *chip8) { printf("annn "); }
-void _bnnn(chip_8 *chip8) { printf("bnnn "); }
-void _cxnn(chip_8 *chip8) { printf("cxnn "); }
+void _9xy0(chip_8 *chip8) {
+	printf("9xy0 ");
+	if (chip8->regs[(chip8->opcode&0x0f00)>>0x8] != chip8->regs[(chip8->opcode&0x00f0)>>0x4])
+		chip8->pc += 2;
+}
+void _annn(chip_8 *chip8) {
+	printf("annn ");
+	chip8->ir = chip8->opcode&0x0fff;
+}
+void _bnnn(chip_8 *chip8) {
+	printf("bnnn ");
+	chip8->pc = chip8->regs[0] + chip8->opcode&0x0fff;
+}
+void _cxnn(chip_8 *chip8) {
+	printf("cxnn ");
+	chip8->regs[(chip8->opcode&0x0f00)>>0x8] = (rand()%255)&(chip8->opcode&0x00ff);
+}
 void _dxyn(chip_8 *chip8) { printf("dxyn "); }
 
 void _ex9e(chip_8 *chip8) { printf("ex9e "); }
 void _exa1(chip_8 *chip8) { printf("exa1 "); }
 
-void _fx07(chip_8 *chip8) { printf("fx07 "); }
+void _fx07(chip_8 *chip8) {
+	printf("fx07 ");
+	chip8->regs[(chip8->opcode&0x0f00)>>0x8] = chip8->delay_timer;
+}
 void _fx0a(chip_8 *chip8) { printf("fx0a "); }
-void _fx15(chip_8 *chip8) { printf("fx15 "); }
-void _fx18(chip_8 *chip8) { printf("fx18 "); }
-void _fx1e(chip_8 *chip8) { printf("fx1e "); }
+void _fx15(chip_8 *chip8) {
+	printf("fx15 ");
+	chip8->delay_timer = chip8->regs[(chip8->opcode&0x0f00)>>0x8];
+}
+void _fx18(chip_8 *chip8) {
+	printf("fx18 ");
+	chip8->sound_timer = chip8->regs[(chip8->opcode&0x0f00)>>0x8];
+}
+void _fx1e(chip_8 *chip8) {
+	printf("fx1e ");
+	chip8->ir += chip8->regs[(chip8->opcode&0x0f00)>>0x8];
+}
 void _fx29(chip_8 *chip8) { printf("fx29 "); }
 void _fx33(chip_8 *chip8) { printf("fx33 "); }
-void _fx55(chip_8 *chip8) { printf("fx55 "); }
-void _fx65(chip_8 *chip8) { printf("fx65 "); }
+void _fx55(chip_8 *chip8) {
+	printf("fx55 ");
+	for (uint8_t reg = 0; reg < (chip8->opcode&0x0f00)>>0x8; reg++)
+		chip8->ram[reg+chip8->ir] = chip8->regs[reg];
+}
+void _fx65(chip_8 *chip8) {
+	printf("fx65 ");
+	for (uint8_t reg = 0; reg < (chip8->opcode&0x0f00)>>0x8; reg++)
+		chip8->regs[reg] = chip8->ram[reg+chip8->ir];
+}
 
 void load_instructions(chip_8 *chip8) {
 	chip8->_0s_[0] = _0nnn;
