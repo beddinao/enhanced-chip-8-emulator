@@ -54,5 +54,4 @@ typedef struct chip8 {
 	void (*_fs_[9])(struct chip8*);
 } chip_8;
 
-
 #endif
