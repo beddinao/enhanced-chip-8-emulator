@@ -108,6 +108,19 @@ void _dxyn(chip_8 *chip8) {
 	uint8_t vx = (chip8->opcode&0xf00)>>0x8,
 	vy = (chip8->opcode&0xf0)>>0x4,
 	n = chip8->opcode&0xf;
+	unsigned x = chip8->regs[vx] % 64;
+	unsigned y = chip8->regs[vy] % 32;
+	chip8->regs[0xf] = 0;
+	for (uint8_t row = 0; row < n; row++) {
+		uint8_t sprite_byte = chip8->ram[chip8->ir+row];
+		for (uint8_t col = 0; col < 8; col++) {
+			uint8_t sprite_pixel = (sprite_byte>>(7-col))&0x1;
+			uint32_t *display_pixel = &chip8->display[y+row][x+col];
+			if (*display_pixel == 1 && sprite_pixel == 1)
+				chip8->regs[0xf] = 1;
+			*display_pixel ^= sprite_pixel;
+		}
+	}
 }
 
 void _ex9e(chip_8 *chip8) { printf("ex9e "); }
@@ -130,7 +143,10 @@ void _fx1e(chip_8 *chip8) {
 	//printf("fx1e ");
 	chip8->ir += chip8->regs[(chip8->opcode&0x0f00)>>0x8];
 }
-void _fx29(chip_8 *chip8) { printf("fx29 "); }
+void _fx29(chip_8 *chip8) {
+	//printf("fx29 ");
+	chip8->ir = chip8->regs[(chip8->opcode&0xf00)>>0x8] * 5 + FONT_START;
+}
 void _fx33(chip_8 *chip8) { printf("fx33 "); }
 void _fx55(chip_8 *chip8) {
 	//printf("fx55 ");
@@ -317,19 +333,13 @@ void draw_routine(void *p) {
 		draw_bg(worker->win, 0x0000ffff);
 		SDL_SetRenderDrawColor(worker->win->renderer, 0xff, 0x00, 0x00, 0xff);
 		for (uint16_t y = 0; y < win->win_height; y++)
-			for (uint16_t x = 0; x < win->win_width; x++) {
-				int resx = x / win->ppx;
-				int resy = y / win->ppy;
-				/*if (resx > 64 || resy > 32)
-					printf("resx: %i, resy: %i\n", resx, resy);*/
-				if (worker->chip8->display[resy][resx]) {
+			for (uint16_t x = 0; x < win->win_width; x++) 
+				if (worker->chip8->display[(uint8_t)(y/win->ppy)][(uint8_t)(x/win->ppx)]) {
 					points[pIndex].x = x;
 					points[pIndex++].y = y;
 				}
-			}
-		if (pIndex) {
+		if (pIndex) 
 			SDL_RenderPoints(worker->win->renderer, points, pIndex);
-		}
 		SDL_RenderPresent(worker->win->renderer);
 	}
 	pthread_mutex_lock(&worker->halt_mutex);
@@ -397,6 +407,7 @@ void *instruction_cycle(void *p) {
 			chip8->delay_timer--;
 		if (chip8->sound_timer)
 			chip8->sound_timer--;
+		usleep(1000);
 	}
 	pthread_mutex_lock(&worker->halt_mutex);
 	worker->halt = true;
