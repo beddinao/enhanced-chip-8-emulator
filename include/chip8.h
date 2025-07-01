@@ -21,8 +21,8 @@ typedef struct graphic {
 	SDL_Renderer *renderer;
 	uint16_t win_height;
 	uint16_t win_width;
-	uint16_t ppx;
-	uint16_t ppy;
+	float ppx;
+	float ppy;
 } win;
 
 typedef struct chip8 {

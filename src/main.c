@@ -211,8 +211,9 @@ bool init_window(worker_data *worker) {
 	SDL_Renderer *renderer = NULL;
 	worker->win->win_height = DEF_WIN_HEIGHT;
 	worker->win->win_width = DEF_WIN_WIDTH;
-	worker->win->ppy = worker->win->win_height/32;
-	worker->win->ppx = worker->win->win_width/64;
+	worker->win->ppy = worker->win->win_height/32.0;
+	worker->win->ppx = worker->win->win_width/64.0;
+	//printf("ppx: %f, ppy: %f\n", worker->win->ppx, worker->win->ppy);
 	if (!SDL_Init(SDL_INIT_EVENTS)) {
 		free(worker->win);
 		return false;
@@ -267,9 +268,6 @@ chip_8 *init_chip8(char *prg) {
 	if (!chip8)
 		return NULL;
 	memset(chip8, 0, sizeof(chip_8));
-	for (uint8_t y = 0; y < 32; y++)
-		for (uint8_t x = 0; x < 64; x++)
-			chip8->display[y][x] = rand() % 2;
 	load_fonts(chip8);
 	load_instructions(chip8);
 	chip8->pc = PRG_LOAD;
@@ -316,16 +314,22 @@ void draw_routine(void *p) {
 			}
 		}
 		pIndex = 0;
-		draw_bg(worker->win, 0xffffffff);
+		draw_bg(worker->win, 0x0000ffff);
 		SDL_SetRenderDrawColor(worker->win->renderer, 0xff, 0x00, 0x00, 0xff);
 		for (uint16_t y = 0; y < win->win_height; y++)
 			for (uint16_t x = 0; x < win->win_width; x++) {
-				if (worker->chip8->display[y/win->ppy][x/win->ppx]) {
+				int resx = x / win->ppx;
+				int resy = y / win->ppy;
+				/*if (resx > 64 || resy > 32)
+					printf("resx: %i, resy: %i\n", resx, resy);*/
+				if (worker->chip8->display[resy][resx]) {
 					points[pIndex].x = x;
 					points[pIndex++].y = y;
 				}
 			}
-		SDL_RenderPoints(worker->win->renderer, points, pIndex);
+		if (pIndex) {
+			SDL_RenderPoints(worker->win->renderer, points, pIndex);
+		}
 		SDL_RenderPresent(worker->win->renderer);
 	}
 	pthread_mutex_lock(&worker->halt_mutex);
