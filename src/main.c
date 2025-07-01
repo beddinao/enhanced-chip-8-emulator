@@ -2,138 +2,143 @@
 
 void _0nnn(chip_8 *chip8) { printf("0nnn "); }
 void _00e0(chip_8 *chip8) {
-	printf("00e0 ");
+	//printf("00e0 ");
 	memset(chip8->display, 0, sizeof(chip8->display));
 }
 void _00ee(chip_8 *chip8) {
-	printf("00ee ");
+	//printf("00ee ");
 	chip8->pc = chip8->stack[chip8->sp--];
 }
 
 void _1nnn(chip_8 *chip8) {
-	printf("1nnn ");
+	//printf("1nnn ");
 	chip8->pc = chip8->opcode&0x0fff;
 }
 void _2nnn(chip_8 *chip8) {
-	printf("2nnn ");
+	//printf("2nnn ");
 	chip8->stack[++chip8->sp] = chip8->pc;
 	chip8->pc = chip8->opcode&0x0fff;
 }
 void _3xnn(chip_8 *chip8) {
-	printf("3xnn ");
+	//printf("3xnn ");
 	if (chip8->regs[(chip8->opcode&0x0f00)>>0x8] == chip8->opcode&0xff)
 		chip8->pc += 2;
 }
 void _4xnn(chip_8 *chip8) {
-	printf("4xnn ");
+	//printf("4xnn ");
 	if (chip8->regs[(chip8->opcode&0x0f00)>>0x8] != chip8->opcode&0xff)
 		chip8->pc += 2;
 }
 void _5xy0(chip_8 *chip8) {
-	printf("5xy0 ");
+	//printf("5xy0 ");
 	if (chip8->regs[(chip8->opcode&0x0f00)>>0x8] == chip8->regs[(chip8->opcode&0x00f0)>>0x4])
 		chip8->pc += 2;
 }
 void _6xnn(chip_8 *chip8) {
-	printf("6xnn ");
+	//printf("6xnn ");
 	chip8->regs[(chip8->opcode&0x0f00)>>0x8] = chip8->opcode&0xff;
 }
 void _7xnn(chip_8 *chip8) {
-	printf("7xnn ");
+	//printf("7xnn ");
 	chip8->regs[(chip8->opcode&0x0f00)>>0x8] = chip8->regs[(chip8->opcode&0x0f00)>>0x8];
 }
 
 void _8xy0(chip_8 *chip8) {
-	printf("8xy0 ");
+	//printf("8xy0 ");
 	chip8->regs[(chip8->opcode&0x0f00)>>0x8] = chip8->regs[(chip8->opcode&0x00f0)>>0x4];
 }
 void _8xy1(chip_8 *chip8) {
-	printf("8xy1 ");
+	//printf("8xy1 ");
 	chip8->regs[(chip8->opcode&0x0f00)>>0x8] |= chip8->regs[(chip8->opcode&0x00f0)>>0x4]; 
 }
 void _8xy2(chip_8 *chip8) {
-	printf("8xy2 ");
+	//printf("8xy2 ");
 	chip8->regs[(chip8->opcode&0x0f00)>>0x8] &= chip8->regs[(chip8->opcode&0x00f0)>>0x4];
 }
 void _8xy3(chip_8 *chip8) {
-	printf("8xy3 ");
+	//printf("8xy3 ");
 	chip8->regs[(chip8->opcode&0x0f00)>>0x8] ^= chip8->regs[(chip8->opcode&0x00f0)>>0x4];
 }
 void _8xy4(chip_8 *chip8) {
-	printf("8xy4 ");
+	//printf("8xy4 ");
 	uint16_t res = chip8->regs[(chip8->opcode&0x0f00)>>0x8] + chip8->regs[(chip8->opcode&0x00f0)>>0x4];
 	chip8->regs[0xf] = res > 0xff;
 	chip8->regs[(chip8->opcode&0x0f00)>>0x8] = res&0xff;
 }
 void _8xy5(chip_8 *chip8) {
-	printf("8xy5 ");
+	//printf("8xy5 ");
 	chip8->regs[0xf] = chip8->regs[(chip8->opcode&0x0f00)>>0x8] > chip8->regs[(chip8->opcode&0x00f0)>>0x4];
 	chip8->regs[(chip8->opcode&0x0f00)>>0x8] -= chip8->regs[(chip8->opcode&0x00f0)>>0x4];
 }
 void _8xy6(chip_8 *chip8) {
-	printf("8xy6 ");
+	//printf("8xy6 ");
 	chip8->regs[0xf] = chip8->regs[(chip8->opcode&0x0f00)>>0x8] & 0x1;
 	chip8->regs[(chip8->opcode&0x0f00)>>0x8] >>= 0x1;
 }
 void _8xy7(chip_8 *chip8) {
-	printf("8xy7 ");
+	//printf("8xy7 ");
 	chip8->regs[0xf] = chip8->regs[(chip8->opcode&0x00f0)>>0x4] > chip8->regs[(chip8->opcode&0x0f00)>>0x8];
 	chip8->regs[(chip8->opcode&0x0f00)>>0x8] = chip8->regs[(chip8->opcode&0x00f0)>>0x4] - chip8->regs[(chip8->opcode&0x0f00)>>0x8];
 }
 void _8xye(chip_8 *chip8) {
-	printf("8xye ");
+	//printf("8xye ");
 	chip8->regs[0xf] = chip8->regs[(chip8->opcode&0x0f00)>>0x8] & 0x80;
 	chip8->regs[(chip8->opcode&0x0f00)>>0x8] <<= 0x1;
 }
 
 void _9xy0(chip_8 *chip8) {
-	printf("9xy0 ");
+	//printf("9xy0 ");
 	if (chip8->regs[(chip8->opcode&0x0f00)>>0x8] != chip8->regs[(chip8->opcode&0x00f0)>>0x4])
 		chip8->pc += 2;
 }
 void _annn(chip_8 *chip8) {
-	printf("annn ");
+	//printf("annn ");
 	chip8->ir = chip8->opcode&0x0fff;
 }
 void _bnnn(chip_8 *chip8) {
-	printf("bnnn ");
+	//printf("bnnn ");
 	chip8->pc = chip8->regs[0] + chip8->opcode&0x0fff;
 }
 void _cxnn(chip_8 *chip8) {
-	printf("cxnn ");
+	//printf("cxnn ");
 	chip8->regs[(chip8->opcode&0x0f00)>>0x8] = (rand()%255)&(chip8->opcode&0x00ff);
 }
-void _dxyn(chip_8 *chip8) { printf("dxyn "); }
+void _dxyn(chip_8 *chip8) {
+	//printf("dxyn ");
+	uint8_t vx = (chip8->opcode&0xf00)>>0x8,
+	vy = (chip8->opcode&0xf0)>>0x4,
+	n = chip8->opcode&0xf;
+}
 
 void _ex9e(chip_8 *chip8) { printf("ex9e "); }
 void _exa1(chip_8 *chip8) { printf("exa1 "); }
 
 void _fx07(chip_8 *chip8) {
-	printf("fx07 ");
+	//printf("fx07 ");
 	chip8->regs[(chip8->opcode&0x0f00)>>0x8] = chip8->delay_timer;
 }
 void _fx0a(chip_8 *chip8) { printf("fx0a "); }
 void _fx15(chip_8 *chip8) {
-	printf("fx15 ");
+	//printf("fx15 ");
 	chip8->delay_timer = chip8->regs[(chip8->opcode&0x0f00)>>0x8];
 }
 void _fx18(chip_8 *chip8) {
-	printf("fx18 ");
+	//printf("fx18 ");
 	chip8->sound_timer = chip8->regs[(chip8->opcode&0x0f00)>>0x8];
 }
 void _fx1e(chip_8 *chip8) {
-	printf("fx1e ");
+	//printf("fx1e ");
 	chip8->ir += chip8->regs[(chip8->opcode&0x0f00)>>0x8];
 }
 void _fx29(chip_8 *chip8) { printf("fx29 "); }
 void _fx33(chip_8 *chip8) { printf("fx33 "); }
 void _fx55(chip_8 *chip8) {
-	printf("fx55 ");
+	//printf("fx55 ");
 	for (uint8_t reg = 0; reg < (chip8->opcode&0x0f00)>>0x8; reg++)
 		chip8->ram[reg+chip8->ir] = chip8->regs[reg];
 }
 void _fx65(chip_8 *chip8) {
-	printf("fx65 ");
+	//printf("fx65 ");
 	for (uint8_t reg = 0; reg < (chip8->opcode&0x0f00)>>0x8; reg++)
 		chip8->regs[reg] = chip8->ram[reg+chip8->ir];
 }
@@ -204,11 +209,15 @@ bool init_window(worker_data *worker) {
 		return false;
 	SDL_Window *win = NULL;
 	SDL_Renderer *renderer = NULL;
+	worker->win->win_height = DEF_WIN_HEIGHT;
+	worker->win->win_width = DEF_WIN_WIDTH;
+	worker->win->ppy = worker->win->win_height/32;
+	worker->win->ppx = worker->win->win_width/64;
 	if (!SDL_Init(SDL_INIT_EVENTS)) {
 		free(worker->win);
 		return false;
 	}
-	win = SDL_CreateWindow("chip 8 emu", DEF_WIN_WIDTH, DEF_WIN_HEIGHT, SDL_WINDOW_RESIZABLE);
+	win = SDL_CreateWindow("chip 8 emu", worker->win->win_width, worker->win->win_height, SDL_WINDOW_RESIZABLE);
 	renderer = SDL_CreateRenderer(win, NULL);
 	if (!win || !renderer) {
 		if (win) SDL_DestroyWindow(win);
@@ -258,6 +267,9 @@ chip_8 *init_chip8(char *prg) {
 	if (!chip8)
 		return NULL;
 	memset(chip8, 0, sizeof(chip_8));
+	for (uint8_t y = 0; y < 32; y++)
+		for (uint8_t x = 0; x < 64; x++)
+			chip8->display[y][x] = rand() % 2;
 	load_fonts(chip8);
 	load_instructions(chip8);
 	chip8->pc = PRG_LOAD;
@@ -268,15 +280,27 @@ chip_8 *init_chip8(char *prg) {
 	return chip8;
 }
 
-void *draw_routine(void *p) {
+void draw_bg(win *win, uint32_t color) {
+	SDL_SetRenderDrawColor(win->renderer,
+		(color>>24)&0xff,
+		(color>>16)&0xff,
+		(color>>8)&0xff,
+		color&0xff);
+	SDL_RenderClear(win->renderer);
+}
+
+void draw_routine(void *p) {
 	worker_data *worker = (worker_data*)p;
-	bool screen_on = true;
+	win *win = worker->win;
 	SDL_Event event;
+	uint32_t pIndex;
+	bool screen_on = true;
+	SDL_FPoint points[win->win_height*win->win_width];
 	while (screen_on) {
 		pthread_mutex_lock(&worker->halt_mutex);
 		if (worker->halt) {
 			pthread_mutex_unlock(&worker->halt_mutex);
-			return NULL;
+			return;
 		}
 		pthread_mutex_unlock(&worker->halt_mutex);
 		if (SDL_PollEvent(&event)) {
@@ -291,29 +315,40 @@ void *draw_routine(void *p) {
 				default:	break;
 			}
 		}
+		pIndex = 0;
+		draw_bg(worker->win, 0xffffffff);
+		SDL_SetRenderDrawColor(worker->win->renderer, 0xff, 0x00, 0x00, 0xff);
+		for (uint16_t y = 0; y < win->win_height; y++)
+			for (uint16_t x = 0; x < win->win_width; x++) {
+				if (worker->chip8->display[y/win->ppy][x/win->ppx]) {
+					points[pIndex].x = x;
+					points[pIndex++].y = y;
+				}
+			}
+		SDL_RenderPoints(worker->win->renderer, points, pIndex);
+		SDL_RenderPresent(worker->win->renderer);
 	}
 	pthread_mutex_lock(&worker->halt_mutex);
 	worker->halt = true;
 	pthread_mutex_unlock(&worker->halt_mutex);
-	return NULL;
 }
 
-void instruction_cycle(void *p, void *p2) {
+void *instruction_cycle(void *p) {
 	bool emu_on = true;
-	chip_8 *chip8 = (chip_8*)p;
-	worker_data *worker = (worker_data*)p2;
+	worker_data *worker = (worker_data*)p;
+	chip_8 *chip8 = worker->chip8;
 	while (emu_on) {
 		pthread_mutex_lock(&worker->halt_mutex);
 		if (worker->halt) {
 			pthread_mutex_unlock(&worker->halt_mutex);
-			return;	
+			return NULL;	
 		}
 		pthread_mutex_unlock(&worker->halt_mutex);
 		if (chip8->pc > PRG_LOAD + chip8->mem_ocu || chip8->pc < PRG_LOAD)
 			break;	
 		chip8->opcode = chip8->ram[chip8->pc] << 0x8 | chip8->ram[chip8->pc+1];
 		chip8->pc += 2;
-		//printf("%02x ", (chip8->opcode & 0xF000) >> 12);
+		////printf("%02x ", (chip8->opcode & 0xF000) >> 12);
 		uint8_t n;
 		switch ((chip8->opcode & 0xF000) >> 12) {
 			case 0x0:
@@ -337,14 +372,14 @@ void instruction_cycle(void *p, void *p2) {
 					case 0x33: chip8->_fs_[6](chip8); break;
 					case 0x55: chip8->_fs_[7](chip8); break;
 					case 0x65: chip8->_fs_[8](chip8); break;
-					default: printf("N(0xf)N ");
+					default:	printf("N(0xf)N ");
 				}
 				break;
 			case 0xe:
 				switch (chip8->opcode & 0xFF) {
 					case 0x9e: chip8->_es_[0](chip8); break;
 					case 0xa1: chip8->_es_[1](chip8); break;
-					default: printf("N(0xe)N "); break;
+					default:	printf("N(0xe)N "); break;
 				}
 				break;
 			default:
@@ -354,10 +389,15 @@ void instruction_cycle(void *p, void *p2) {
 				else printf("NONE ");
 				break;
 		}
+		if (chip8->delay_timer)
+			chip8->delay_timer--;
+		if (chip8->sound_timer)
+			chip8->sound_timer--;
 	}
 	pthread_mutex_lock(&worker->halt_mutex);
 	worker->halt = true;
 	pthread_mutex_unlock(&worker->halt_mutex);
+	return NULL;
 }
 
 int main(int c, char **v) {
@@ -365,6 +405,7 @@ int main(int c, char **v) {
 		printf("usage: %s [program to execute]", v[0]);
 		return 1;
 	}
+	srand(time(NULL));
 	chip_8 *chip8 = init_chip8(v[1]);
 	if (!chip8)
 		return 1;
@@ -382,8 +423,8 @@ int main(int c, char **v) {
 	}
 	pthread_mutex_init(&worker->halt_mutex, NULL);
 	pthread_mutex_init(&worker->prg_mutex, NULL);
-	pthread_create(&worker->worker, NULL, draw_routine, worker);
-	instruction_cycle(chip8, worker);
+	pthread_create(&worker->worker, NULL, instruction_cycle, worker);
+	draw_routine(worker);
 	//
 	pthread_join(worker->worker, NULL);
 	pthread_mutex_destroy(&worker->halt_mutex);
