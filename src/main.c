@@ -1,6 +1,6 @@
 #include <chip8.h>
 
-void _0nnn(chip_8 *chip8) { chip8->pc = chip8->opcode&0xfff; }
+void _0nnn(chip_8 *chip8) { /*chip8->pc = chip8->opcode&0xfff;*/(void)chip8; }
 void _00e0(chip_8 *chip8) { memset(chip8->display, 0, sizeof(chip8->display)); }
 void _00ee(chip_8 *chip8) { if (chip8->sp) chip8->pc = chip8->stack[--chip8->sp]; }
 void _1nnn(chip_8 *chip8) { chip8->pc = chip8->opcode&0xfff; }
@@ -44,15 +44,17 @@ void _bnnn(chip_8 *chip8) { chip8->pc = chip8->regs[0] + (chip8->opcode&0xfff); 
 void _cxnn(chip_8 *chip8) { chip8->regs[(chip8->opcode&0xf00)>>0x8] = (rand()%255)&(chip8->opcode&0xff); }
 void _dxyn(chip_8 *chip8) {
 	unsigned x = chip8->regs[(chip8->opcode&0xf00)>>0x8] % 64;
-	unsigned y = chip8->regs[(chip8->opcode&0xf0)>>0x8] % 32;
-	uint8_t sprite_pixel, sprite_byte;
+	unsigned y = chip8->regs[(chip8->opcode&0xf0)>>0x4] % 32;
+	uint8_t sprite_pixel, sprite_byte, n = chip8->opcode&0xf;
 	uint32_t *display_pixel;
-	for (uint8_t row = 0; row < chip8->opcode&0xf; row++) {
+	chip8->regs[0xf] = 0;
+	for (uint8_t row = 0; row < n; row++) {
 		sprite_byte = chip8->ram[chip8->ir+row];
 		for (uint8_t col = 0; col < 8; col++) {
 			sprite_pixel = (sprite_byte>>(7-col))&0x1;
 			display_pixel = &chip8->display[y+row][x+col];
-			chip8->regs[0xf] = *display_pixel == 1 && sprite_pixel == 1;
+			if (*display_pixel == 1 && sprite_pixel == 1)
+				chip8->regs[0xf] = 1;
 			*display_pixel ^= sprite_pixel;
 		}
 	}
@@ -258,19 +260,19 @@ void *instruction_cycle(void *p) {
 			break;	
 		chip8->opcode = chip8->ram[chip8->pc] << 0x8 | chip8->ram[chip8->pc+1];
 		chip8->pc += 2;
-		switch ((chip8->opcode & 0xF000) >> 12) {
+		switch ((chip8->opcode & 0xf000) >> 12) {
 			case 0x0:
 				if (chip8->opcode == 0x00e0) chip8->_0s_[1](chip8);
 				else if (chip8->opcode == 0x00ee) chip8->_0s_[2](chip8);
 				else chip8->_0s_[0](chip8);
 				break;
 			case 0x8:
-				n = chip8->opcode & 0x000F;
+				n = chip8->opcode & 0x000f;
 				if (n == 0xe) chip8->_8s_[0x8](chip8);
 				else chip8->_8s_[n](chip8);
 				break;
 			case 0xf:
-				switch (chip8->opcode & 0xFF) {
+				switch (chip8->opcode & 0xff) {
 					case 0x07: chip8->_fs_[0](chip8); break;
 					case 0x0a: chip8->_fs_[1](chip8); break;
 					case 0x15: chip8->_fs_[2](chip8); break;
@@ -284,14 +286,14 @@ void *instruction_cycle(void *p) {
 				}
 				break;
 			case 0xe:
-				switch (chip8->opcode & 0xFF) {
+				switch (chip8->opcode & 0xff) {
 					case 0x9e: chip8->_es_[0](chip8); break;
 					case 0xa1: chip8->_es_[1](chip8); break;
 					default:	printf("N(0xe)N "); break;
 				}
 				break;
 			default:
-				n = (chip8->opcode & 0xF000) >> 12;
+				n = (chip8->opcode & 0xf000) >> 12;
 				if (n <= 0x7 && n >= 0x1) chip8->_1_7s_[n-0x1](chip8);
 				else if (n <= 0xd && n >= 0x9) chip8->_9_d_[n-0x9](chip8);
 				else printf("NONE ");
