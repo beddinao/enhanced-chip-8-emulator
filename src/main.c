@@ -8,9 +8,9 @@ void _2nnn(chip_8 *chip8) {
 	chip8->stack[chip8->sp++] = chip8->pc;
 	chip8->pc = chip8->opcode&0xfff;
 }
-void _3xnn(chip_8 *chip8) { chip8->pc += chip8->regs[(chip8->opcode&0xf00)>>0x8] == chip8->opcode&0xff ? 2 : 0; }
-void _4xnn(chip_8 *chip8) { chip8->pc += chip8->regs[(chip8->opcode&0xf00)>>0x8] != chip8->opcode&0xff ? 2 : 0; }
-void _5xy0(chip_8 *chip8) { chip8->pc += chip8->regs[(chip8->opcode&0xf00)>>0x8] == chip8->regs[(chip8->opcode&0xf0)>>0x4] ? 2 : 0; }
+void _3xnn(chip_8 *chip8) { chip8->pc += (chip8->regs[(chip8->opcode&0xf00)>>0x8] == (chip8->opcode&0xff) ? 2 : 0); }
+void _4xnn(chip_8 *chip8) { chip8->pc += (chip8->regs[(chip8->opcode&0xf00)>>0x8] != (chip8->opcode&0xff) ? 2 : 0); }
+void _5xy0(chip_8 *chip8) { chip8->pc += (chip8->regs[(chip8->opcode&0xf00)>>0x8] == chip8->regs[(chip8->opcode&0xf0)>>0x4] ? 2 : 0); }
 void _6xnn(chip_8 *chip8) { chip8->regs[(chip8->opcode&0xf00)>>0x8] = chip8->opcode&0xff; }
 void _7xnn(chip_8 *chip8) { chip8->regs[(chip8->opcode&0xf00)>>0x8] += chip8->opcode&0xff; }
 void _8xy0(chip_8 *chip8) { chip8->regs[(chip8->opcode&0xf00)>>0x8] = chip8->regs[(chip8->opcode&0xf0)>>0x4]; }
@@ -258,7 +258,9 @@ void *instruction_cycle(void *p) {
 		pthread_mutex_unlock(&worker->halt_mutex);
 		if (chip8->pc > PRG_LOAD + chip8->mem_ocu || chip8->pc < PRG_LOAD)
 			break;	
+		//printf("fetch:%04x>> ", chip8->pc);
 		chip8->opcode = chip8->ram[chip8->pc] << 0x8 | chip8->ram[chip8->pc+1];
+		//printf(" <<%04x:fetch ", chip8->opcode);
 		chip8->pc += 2;
 		switch ((chip8->opcode & 0xf000) >> 12) {
 			case 0x0:
