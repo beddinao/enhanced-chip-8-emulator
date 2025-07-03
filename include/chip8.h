@@ -30,6 +30,8 @@ typedef struct chip8 {
 	uint8_t regs[16];
 	uint16_t stack[16];
 	bool display[32][64];
+	bool keyboard[16];
+	int8_t keypress;
 	uint16_t pc;
 	uint16_t ir;
 	uint8_t sp;
@@ -43,6 +45,7 @@ typedef struct chip8 {
 	void (*_9_d_[5])(struct chip8*);
 	void (*_es_[2])(struct chip8*);
 	void (*_fs_[9])(struct chip8*);
+	bool emu_on;
 } chip_8;
 
 typedef struct worker {
