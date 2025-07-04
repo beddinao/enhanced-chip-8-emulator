@@ -15,6 +15,18 @@
 #define RAM_SIZE 0x1000 
 #define FONT_START 0x50
 #define PRG_LOAD 0x200
+#define NANOS_PER_SECOND 1000000000
+
+#define INSTRUCTIONS_PER_SECOND 700 
+#define NANOS_PER_INSTRUCTION NANOS_PER_SECOND/INSTRUCTIONS_PER_SECOND
+// 1197Mips **700Mips
+
+#define CYCLES_PER_SECOND 60
+#define NANOS_PER_CYCLE NANOS_PER_SECOND/CYCLES_PER_SECOND
+// 60hz
+
+#define FPS 60
+#define NANOS_PER_FRAME NANOS_PER_SECOND/FPS
 
 typedef struct graphic {
 	SDL_Window *window;
@@ -50,6 +62,7 @@ typedef struct chip8 {
 
 typedef struct worker {
 	pthread_t worker;
+	pthread_t clock_worker;
 	pthread_mutex_t halt_mutex;
 	pthread_mutex_t prg_mutex;
 	win *win;

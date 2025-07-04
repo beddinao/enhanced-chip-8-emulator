@@ -250,12 +250,15 @@ void draw_bg(win *win, uint32_t color) {
 }
 
 void draw_routine(void *p) {
+	struct timespec frame_start_time, frame_end_time;
+	uint64_t elapsed_nanoseconds;
 	worker_data *worker = (worker_data*)p;
 	win *win = worker->win;
 	SDL_Event event;
 	uint32_t pIndex;
 	bool screen_on = true;
 	SDL_FPoint points[win->win_height*win->win_width];
+	clock_gettime(CLOCK_MONOTONIC, &frame_start_time);
 	while (screen_on) {
 		pthread_mutex_lock(&worker->halt_mutex);
 		if (worker->halt) {
@@ -271,6 +274,12 @@ void draw_routine(void *p) {
 				default:	break;
 			}
 		}
+		clock_gettime(CLOCK_MONOTONIC, &frame_end_time);
+		elapsed_nanoseconds = (frame_end_time.tv_sec-frame_start_time.tv_sec) * NANOS_PER_SECOND
+				+ (frame_end_time.tv_nsec-frame_start_time.tv_nsec);
+		if (elapsed_nanoseconds < NANOS_PER_FRAME)
+			continue;
+		else clock_gettime(CLOCK_MONOTONIC, &frame_start_time);
 		pIndex = 0;
 		draw_bg(worker->win, 0x0000ffff);
 		SDL_SetRenderDrawColor(worker->win->renderer, 0xff, 0x00, 0x00, 0xff);
@@ -289,12 +298,51 @@ void draw_routine(void *p) {
 	pthread_mutex_unlock(&worker->halt_mutex);
 }
 
+void *timer_cycle(void *p) {
+	struct timespec cycle_start_time, cycle_end_time, sleep_time;
+	uint64_t elapsed_nanoseconds;
+	worker_data *worker = (worker_data*)p;
+	chip_8 *chip8 = worker->chip8;
+	memset(&cycle_start_time, 0, sizeof(struct timespec));
+	memset(&cycle_end_time, 0, sizeof(struct timespec));
+	memset(&sleep_time, 0, sizeof(struct timespec));
+	while (true) {
+		clock_gettime(CLOCK_MONOTONIC, &cycle_start_time);
+		pthread_mutex_lock(&worker->halt_mutex);
+		if (worker->halt) {
+			pthread_mutex_unlock(&worker->halt_mutex);
+			return NULL;
+		}
+		pthread_mutex_unlock(&worker->halt_mutex);
+		if (chip8->delay_timer)
+			chip8->delay_timer -= 1;
+		if (chip8->sound_timer)
+			chip8->sound_timer -= 1;
+		clock_gettime(CLOCK_MONOTONIC, &cycle_end_time);
+		elapsed_nanoseconds = (cycle_end_time.tv_sec - cycle_start_time.tv_sec)*NANOS_PER_SECOND
+			+ (cycle_end_time.tv_nsec-cycle_start_time.tv_nsec);
+		if (elapsed_nanoseconds < NANOS_PER_CYCLE) {
+			sleep_time.tv_sec = 0;
+			sleep_time.tv_nsec = NANOS_PER_CYCLE - elapsed_nanoseconds;
+			nanosleep(&sleep_time, NULL);
+		}
+	}	
+}
+
 void *instruction_cycle(void *p) {
+	struct timespec frame_start_time, frame_end_time, sleep_time;
+	uint64_t elapsed_nanoseconds;
 	worker_data *worker = (worker_data*)p;
 	chip_8 *chip8 = worker->chip8;
 	chip8->emu_on = true;
 	uint8_t n;
+	memset(&frame_start_time, 0, sizeof(struct timespec));
+	memset(&frame_end_time, 0, sizeof(struct timespec));
+	memset(&sleep_time, 0, sizeof(struct timespec));
 	while (true) {
+		//
+		clock_gettime(CLOCK_MONOTONIC, &frame_start_time);
+		//
 		pthread_mutex_lock(&worker->halt_mutex);
 		if (worker->halt) {
 			pthread_mutex_unlock(&worker->halt_mutex);
@@ -346,11 +394,15 @@ void *instruction_cycle(void *p) {
 				else printf("NONE ");
 				break;
 		}
-		if (chip8->delay_timer)
-			chip8->delay_timer--;
-		if (chip8->sound_timer)
-			chip8->sound_timer--;
-		usleep(1000);
+
+		clock_gettime(CLOCK_MONOTONIC, &frame_end_time);
+		elapsed_nanoseconds = (frame_end_time.tv_sec - frame_start_time.tv_sec) * NANOS_PER_SECOND
+			+ (frame_end_time.tv_nsec - frame_start_time.tv_nsec);
+		if (elapsed_nanoseconds < NANOS_PER_INSTRUCTION) {
+			sleep_time.tv_sec = 0;
+			sleep_time.tv_nsec = NANOS_PER_INSTRUCTION - elapsed_nanoseconds;
+			nanosleep(&sleep_time, NULL);
+		}
 	}
 	pthread_mutex_lock(&worker->halt_mutex);
 	worker->halt = true;
@@ -382,9 +434,11 @@ int main(int c, char **v) {
 	pthread_mutex_init(&worker->halt_mutex, NULL);
 	pthread_mutex_init(&worker->prg_mutex, NULL);
 	pthread_create(&worker->worker, NULL, instruction_cycle, worker);
+	pthread_create(&worker->clock_worker, NULL, timer_cycle, worker);
 	draw_routine(worker);
 	//
 	pthread_join(worker->worker, NULL);
+	pthread_join(worker->clock_worker, NULL);
 	pthread_mutex_destroy(&worker->halt_mutex);
 	pthread_mutex_destroy(&worker->prg_mutex);
 	SDL_DestroyRenderer(worker->win->renderer);
