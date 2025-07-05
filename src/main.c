@@ -426,13 +426,16 @@ int main(int c, char **v) {
 	}
 	memset(worker, 0, sizeof(worker_data));
 	worker->chip8 = chip8;
-	if (!init_window(worker)) {
+	worker->io_p = malloc(sizeof(io_p));
+	if (!worker->io_p || !init_window(worker)) {
+		if (worker->io_p) free(worker->io_p);
 		free(worker);
 		free(chip8);
 		return 1;
 	}
 	pthread_mutex_init(&worker->halt_mutex, NULL);
 	pthread_mutex_init(&worker->prg_mutex, NULL);
+	pthread_mutex_init(&worker->iop_mutex, NULL);
 	pthread_create(&worker->worker, NULL, instruction_cycle, worker);
 	pthread_create(&worker->clock_worker, NULL, timer_cycle, worker);
 	draw_routine(worker);
@@ -441,6 +444,7 @@ int main(int c, char **v) {
 	pthread_join(worker->clock_worker, NULL);
 	pthread_mutex_destroy(&worker->halt_mutex);
 	pthread_mutex_destroy(&worker->prg_mutex);
+	pthread_mutex_destroy(&worker->iop_mutex);
 	SDL_DestroyRenderer(worker->win->renderer);
 	SDL_DestroyWindow(worker->win->window);
 	SDL_Quit();
