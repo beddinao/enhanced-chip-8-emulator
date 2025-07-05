@@ -426,9 +426,7 @@ int main(int c, char **v) {
 	}
 	memset(worker, 0, sizeof(worker_data));
 	worker->chip8 = chip8;
-	worker->io_p = malloc(sizeof(io_p));
-	if (!worker->io_p || !init_window(worker)) {
-		if (worker->io_p) free(worker->io_p);
+	if (!init_window(worker)) {
 		free(worker);
 		free(chip8);
 		return 1;

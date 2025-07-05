@@ -27,50 +27,49 @@
 #define NANOS_PER_FRAME NANOS_PER_SECOND/FPS
 
 typedef struct graphic {
-	SDL_Window *window;
-	SDL_Renderer *renderer;
-	uint16_t win_height;
-	uint16_t win_width;
-	float ppx;
-	float ppy;
+	SDL_Window	*window;
+	SDL_Renderer	*renderer;
+	uint16_t	win_height;
+	uint16_t	win_width;
+	float	ppx;
+	float	ppy;
 } win;
 
-typedef struct io_p {
-	bool display[32][64];
-	bool keyboard[16];
-	int8_t keypress;
-} io_p;
-
 typedef struct chip8 {
-	uint8_t ram[RAM_SIZE];
-	uint16_t pc;
-	uint16_t ir;
-	uint8_t sp;
-	uint8_t delay_timer;
-	uint8_t sound_timer;
-	uint16_t opcode;
-	uint8_t regs[16];
-	uint16_t stack[16];
-	void (*_0s_[3])(struct chip8*);
-	void (*_1_7s_[7])(struct chip8*);
-	void (*_8s_[9])(struct chip8*);
-	void (*_9_d_[5])(struct chip8*);
-	void (*_es_[2])(struct chip8*);
-	void (*_fs_[9])(struct chip8*);
-	unsigned mem_ocu;
-	bool emu_on;
+	uint16_t	pc;
+	uint16_t	ir;
+	uint8_t	sp;
+	uint8_t	delay_timer;
+	uint8_t	sound_timer;
+
+	uint8_t	ram[RAM_SIZE];
+	bool	display[32][64];
+	bool	keyboard[16];
+	uint8_t	regs[16];
+	uint16_t	stack[16];
+
+	void	(*_0s_[3])(struct chip8*);
+	void	(*_1_7s_[7])(struct chip8*);
+	void	(*_8s_[9])(struct chip8*);
+	void	(*_9_d_[5])(struct chip8*);
+	void	(*_es_[2])(struct chip8*);
+	void	(*_fs_[9])(struct chip8*);
+
+	uint16_t	opcode;
+	uint16_t	mem_ocu;
+	int8_t	keypress;
+	bool	emu_on;
 } chip_8;
 
 typedef struct worker {
-	bool halt;
-	pthread_t worker;
-	pthread_t clock_worker;
-	pthread_mutex_t halt_mutex;
-	pthread_mutex_t iop_mutex;
-	pthread_mutex_t prg_mutex;
-	chip_8 *chip8;
-	io_p *iop;
-	win *win;
+	bool	halt;
+	pthread_t	worker;
+	pthread_t	clock_worker;
+	pthread_mutex_t	halt_mutex;
+	pthread_mutex_t	iop_mutex;
+	pthread_mutex_t	prg_mutex;
+	win	*win;
+	chip_8	*chip8;
 } worker_data;
 
 #endif
