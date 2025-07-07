@@ -49,7 +49,7 @@ void _dxyn(chip_8 *chip8) {
 	unsigned x = chip8->regs[(chip8->opcode&0xf00)>>0x8] % 64;
 	unsigned y = chip8->regs[(chip8->opcode&0xf0)>>0x4] % 32;
 	uint8_t sprite_pixel, sprite_byte, n = chip8->opcode&0xf;
-	uint32_t *display_pixel;
+	uint8_t *display_pixel;
 	bool prv;
 	chip8->regs[0xf] = 0;
 	for (uint8_t row = 0; row < n && row+y < 32; row++) {
