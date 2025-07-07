@@ -42,7 +42,7 @@ typedef struct chip8 {
 	uint8_t	sound_timer;
 
 	uint8_t	ram[RAM_SIZE];
-	bool	display[32][64];
+	uint8_t	display[32][64];
 	bool	keyboard[16];
 	uint8_t	regs[16];
 	uint16_t	stack[16];
