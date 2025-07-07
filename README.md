@@ -4,15 +4,15 @@
 <a href="https://en.wikipedia.org/wiki/CHIP-8">CHIP-8</a> - <a href="https://www.libsdl.org/">SDL</a>
 
 ```
-• 64x32 pixel monochrome display.
-• 4K of 8-bit RAM.
-• 16 general-purpose 8-bit registers (V0–VF).
-• 16-bit I - address register
+• 60Fps 64x32 pixel monochrome display (~16666667 nanoseconds per frame).
+• 4K 8-bit RAM.
+• 16 8-bit registers (V0–VF).
 • 16-bit PC - program counter
-• Stack of 16-bit addresses for call/return.
-• 8-bit delay timer (decremented at 60 Hz) until it reaches 0.
-• 8-bit sound timer (decremented at 60 Hz), beeps when it reaches 0
-• Hexadecimal Keypad: 16 keys with codes ranging from 0x0 to 0xF.
+• 16-bit I - index register
+• 16-bit one-page stack.
+• 700 instructions per second (~1428571 nanosecond per instruction)
+• 8-bit delay and sound timers (decrements at 60Hz) ~16666667 nanoseconds per timer cycle.
+• Hex Keypad:
   1 2 3 C
   4 5 6 D
   7 8 9 E
