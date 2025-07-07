@@ -143,7 +143,7 @@ bool init_window(worker_data *worker) {
 	win = SDL_CreateWindow("chip 8 emu",
 		worker->win->win_width,
 		worker->win->win_height,
-		SDL_WINDOW_RESIZABLE);
+		/*SDL_WINDOW_RESIZABLE*/0);
 	renderer = SDL_CreateRenderer(win, NULL);
 	if (!win || !renderer) {
 		if (win) SDL_DestroyWindow(win);
