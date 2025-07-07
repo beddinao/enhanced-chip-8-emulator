@@ -1,6 +1,6 @@
 #include <chip8.h>
 
-void _0nnn(chip_8 *chip8) { /*chip8->pc = chip8->opcode&0xfff;*/(void)chip8; }
+void _0nnn(chip_8 *chip8) { chip8->pc = chip8->opcode&0xfff; }
 void _00e0(chip_8 *chip8) { memset(chip8->display, 0, sizeof(chip8->display)); }
 void _00ee(chip_8 *chip8) { if (chip8->sp) chip8->pc = chip8->stack[--chip8->sp]; }
 void _1nnn(chip_8 *chip8) { chip8->pc = chip8->opcode&0xfff; }
@@ -50,16 +50,21 @@ void _dxyn(chip_8 *chip8) {
 	unsigned y = chip8->regs[(chip8->opcode&0xf0)>>0x4] % 32;
 	uint8_t sprite_pixel, sprite_byte, n = chip8->opcode&0xf;
 	uint32_t *display_pixel;
+	bool prv;
 	chip8->regs[0xf] = 0;
 	for (uint8_t row = 0; row < n && row+y < 32; row++) {
 		sprite_byte = chip8->ram[chip8->ir+row];
 		for (uint8_t col = 0; col < 8&&col+x<64; col++) {
 			sprite_pixel = (sprite_byte>>(7-col))&0x1;
 			display_pixel = &chip8->display[y+row][x+col];
-			if (*display_pixel == 1 && sprite_pixel == 1) {
+			/*if (*display_pixel == 1 && sprite_pixel == 1) {
+				prv = 1;	
+			}*/
+			prv = *display_pixel;
+			*display_pixel ^= sprite_pixel;
+			if (prv && !(*display_pixel)) {
 				chip8->regs[0xf] = 1;
 			}
-			*display_pixel ^= sprite_pixel;
 		}
 	}
 }
@@ -166,7 +171,7 @@ bool load_prg(chip_8 *chip8, char *prg) {
 	FILE *file = fopen(prg, "rb");
 	if (!file) return false;
 	memset(buffer, 0, sizeof(buffer));
-	printf("DUMPING (%s): ", prg);
+	printf("DUMPING (%s):\n", prg);
 	while((chars_read = fread(buffer, 1, sizeof(buffer), file))) {
 		if (chars_read + chip8->mem_ocu > RAM_SIZE - PRG_LOAD) {
 			fclose(file);
@@ -174,7 +179,12 @@ bool load_prg(chip_8 *chip8, char *prg) {
 		}
 		memcpy(chip8->ram + PRG_LOAD + chip8->mem_ocu, buffer, chars_read);
 		chip8->mem_ocu += chars_read;
-		for (int i = 0; i < chars_read; i++) printf("%02x ", buffer[i]);
+		for (unsigned raw_addr = 0; raw_addr <= chars_read; raw_addr += 0x10) {
+			printf("$%04x: ", raw_addr);
+			for (unsigned col = 0; col < 0x10&&col + raw_addr < chars_read; col++)
+				printf("%02x ", buffer[raw_addr+col]);
+			printf("\n");
+		}
 		printf("\n");
 		memset(buffer, 0, sizeof(buffer));
 	}
@@ -194,6 +204,7 @@ chip_8 *init_chip8(char *prg) {
 	load_instructions(chip8);
 	chip8->pc = PRG_LOAD;
 	if (!load_prg(chip8, prg)) {
+		printf("can't load program\n");
 		free(chip8);
 		return NULL;
 	}
@@ -281,8 +292,8 @@ void draw_routine(void *p) {
 			continue;
 		else clock_gettime(CLOCK_MONOTONIC, &frame_start_time);
 		pIndex = 0;
-		draw_bg(worker->win, 0x0000ffff);
-		SDL_SetRenderDrawColor(worker->win->renderer, 0xff, 0x00, 0x00, 0xff);
+		draw_bg(worker->win, 0xfffcf2ff); 
+		SDL_SetRenderDrawColor(worker->win->renderer, 0x25, 0x24, 0x22, 0xff);
 		for (uint16_t y = 0; y < win->win_height; y++)
 			for (uint16_t x = 0; x < win->win_width; x++) 
 				if (worker->chip8->display[(uint8_t)(y/win->ppy)][(uint8_t)(x/win->ppx)]) {
@@ -340,9 +351,7 @@ void *instruction_cycle(void *p) {
 	memset(&frame_end_time, 0, sizeof(struct timespec));
 	memset(&sleep_time, 0, sizeof(struct timespec));
 	while (true) {
-		//
 		clock_gettime(CLOCK_MONOTONIC, &frame_start_time);
-		//
 		pthread_mutex_lock(&worker->halt_mutex);
 		if (worker->halt) {
 			pthread_mutex_unlock(&worker->halt_mutex);
@@ -412,7 +421,7 @@ void *instruction_cycle(void *p) {
 
 int main(int c, char **v) {
 	if (c != 2) {
-		printf("usage: %s [program to execute]", v[0]);
+		printf("usage: %s [program to execute]\n", v[0]);
 		return 1;
 	}
 	srand(time(NULL));
@@ -427,6 +436,7 @@ int main(int c, char **v) {
 	memset(worker, 0, sizeof(worker_data));
 	worker->chip8 = chip8;
 	if (!init_window(worker)) {
+		printf("failed to initiate sdl window\n");
 		free(worker);
 		free(chip8);
 		return 1;
@@ -437,7 +447,6 @@ int main(int c, char **v) {
 	pthread_create(&worker->worker, NULL, instruction_cycle, worker);
 	pthread_create(&worker->clock_worker, NULL, timer_cycle, worker);
 	draw_routine(worker);
-	//
 	pthread_join(worker->worker, NULL);
 	pthread_join(worker->clock_worker, NULL);
 	pthread_mutex_destroy(&worker->halt_mutex);
