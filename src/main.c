@@ -289,7 +289,7 @@ void draw_routine(void *p) {
 			continue;
 		else clock_gettime(CLOCK_MONOTONIC, &frame_start_time);
 		pIndex = 0;
-		draw_bg(worker->win, 0x001219ff);//fffcf2,252422,ccc5b,001219
+		draw_bg(worker->win, 0x000507ff);//fffcf2,252422,ccc5b,001219
 		SDL_SetRenderDrawColor(worker->win->renderer, 0xff, 0xfc, 0xf2, 0xff);
 		for (uint16_t y = 0; y < win->win_height; y++)
 			for (uint16_t x = 0; x < win->win_width; x++) { 
