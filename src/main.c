@@ -137,7 +137,7 @@ bool init_window(worker_data *worker) {
 		free(worker->win);
 		return false;
 	}
-	win = SDL_CreateWindow("chip 8 emu",
+	win = SDL_CreateWindow("chip-8 emu",
 		worker->win->win_width,
 		worker->win->win_height,
 		/*SDL_WINDOW_RESIZABLE*/0);
@@ -175,20 +175,19 @@ bool load_prg(chip_8 *chip8, char *prg) {
 			return false;
 		}
 		memcpy(chip8->ram + PRG_LOAD + chip8->mem_ocu, buffer, chars_read);
-		chip8->mem_ocu += chars_read;
 		for (unsigned raw_addr = 0; raw_addr <= chars_read; raw_addr += 0x10) {
-			printf("$%04x: ", raw_addr);
-			for (unsigned col = 0; col < 0x10&&col + raw_addr < chars_read; col++)
-				printf("%02x ", buffer[raw_addr+col]);
+			printf("$%04x($%04x): ", raw_addr, PRG_LOAD+chip8->mem_ocu+raw_addr);
+			for (unsigned col = 0; col < 0xf&&col + raw_addr +1 < chars_read; col+=2)
+				printf("%04x ", buffer[raw_addr+col] << 8|buffer[raw_addr+col+1]);
 			printf("\n");
 		}
-		printf("\n");
 		memset(buffer, 0, sizeof(buffer));
+		chip8->mem_ocu += chars_read;
 	}
 	fclose(file);
 	if (!chip8->mem_ocu)
 		return false;
-	printf("PROGRAM LOADED\n");
+	printf("PROGRAM LOADED AT $%04x -> $%04x\n", PRG_LOAD, PRG_LOAD+chip8->mem_ocu);
 	return true;
 }
 
@@ -288,22 +287,21 @@ void draw_routine(void *p) {
 		if (elapsed_nanoseconds < NANOS_PER_FRAME)
 			continue;
 		else clock_gettime(CLOCK_MONOTONIC, &frame_start_time);
-		pIndex = 0;
-		draw_bg(worker->win, 0x000507ff);//fffcf2,252422,ccc5b,001219
-		SDL_SetRenderDrawColor(worker->win->renderer, 0xff, 0xfc, 0xf2, 0xff);
+		memset(&pIndex, 0, sizeof(uint32_t));
 		for (uint16_t y = 0; y < win->win_height; y++)
 			for (uint16_t x = 0; x < win->win_width; x++) { 
-				uint8_t _x = x / (int)win->ppx;
-				uint8_t _y = y / (int)win->ppy;
-				if (((y%(int)win->ppy) && (x%(int)win->ppx))
-					&& worker->chip8->display[_y][_x]) {
+				if (((y%win->ppy) && (x%win->ppx))
+					&& worker->chip8->display[y/win->ppy][x/win->ppx]) {
 					points[pIndex].x = x;
 					points[pIndex++].y = y;
 				}
 			}
-		if (pIndex) 
+		if (pIndex) { 
+			draw_bg(worker->win, 0x000810ff);//fffcf2,252422,ccc5b,001219
+			SDL_SetRenderDrawColor(worker->win->renderer, 0xff, 0xfc, 0xf2, 0xff);
 			SDL_RenderPoints(worker->win->renderer, points, pIndex);
-		SDL_RenderPresent(worker->win->renderer);
+			SDL_RenderPresent(worker->win->renderer);
+		}
 	}
 	pthread_mutex_lock(&worker->halt_mutex);
 	worker->halt = true;
@@ -425,7 +423,6 @@ int main(int c, char **v) {
 		printf("usage: %s [program to execute]\n", v[0]);
 		return 1;
 	}
-	srand(time(NULL));
 	chip_8 *chip8 = init_chip8(v[1]);
 	if (!chip8)
 		return 1;
@@ -442,6 +439,7 @@ int main(int c, char **v) {
 		free(chip8);
 		return 1;
 	}
+	srand(time(NULL));
 	pthread_mutex_init(&worker->halt_mutex, NULL);
 	pthread_mutex_init(&worker->prg_mutex, NULL);
 	pthread_mutex_init(&worker->iop_mutex, NULL);
