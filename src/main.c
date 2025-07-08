@@ -57,9 +57,6 @@ void _dxyn(chip_8 *chip8) {
 		for (uint8_t col = 0; col < 8&&col+x<64; col++) {
 			sprite_pixel = (sprite_byte>>(7-col))&0x1;
 			display_pixel = &chip8->display[y+row][x+col];
-			/*if (*display_pixel == 1 && sprite_pixel == 1) {
-				prv = 1;	
-			}*/
 			prv = *display_pixel;
 			*display_pixel ^= sprite_pixel;
 			if (prv && !(*display_pixel)) {
@@ -292,14 +289,18 @@ void draw_routine(void *p) {
 			continue;
 		else clock_gettime(CLOCK_MONOTONIC, &frame_start_time);
 		pIndex = 0;
-		draw_bg(worker->win, 0xfffcf2ff); 
-		SDL_SetRenderDrawColor(worker->win->renderer, 0x25, 0x24, 0x22, 0xff);
+		draw_bg(worker->win, 0x001219ff);//fffcf2,252422,ccc5b,001219
+		SDL_SetRenderDrawColor(worker->win->renderer, 0xff, 0xfc, 0xf2, 0xff);
 		for (uint16_t y = 0; y < win->win_height; y++)
-			for (uint16_t x = 0; x < win->win_width; x++) 
-				if (worker->chip8->display[(uint8_t)(y/win->ppy)][(uint8_t)(x/win->ppx)]) {
+			for (uint16_t x = 0; x < win->win_width; x++) { 
+				uint8_t _x = x / (int)win->ppx;
+				uint8_t _y = y / (int)win->ppy;
+				if (((y%(int)win->ppy) && (x%(int)win->ppx))
+					&& worker->chip8->display[_y][_x]) {
 					points[pIndex].x = x;
 					points[pIndex++].y = y;
 				}
+			}
 		if (pIndex) 
 			SDL_RenderPoints(worker->win->renderer, points, pIndex);
 		SDL_RenderPresent(worker->win->renderer);

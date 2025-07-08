@@ -8,8 +8,8 @@
 #include <pthread.h>
 #include <SDL3/SDL.h>
 
-#define DEF_WIN_WIDTH 1000
-#define DEF_WIN_HEIGHT 500
+#define DEF_WIN_WIDTH 1024
+#define DEF_WIN_HEIGHT 512
 #define MIN_WIN_WIDTH 200
 #define MIN_WIN_HEIGHT 100
 #define RAM_SIZE 0x1000 
@@ -30,8 +30,8 @@ typedef struct graphic {
 	SDL_Renderer	*renderer;
 	uint16_t	win_height;
 	uint16_t	win_width;
-	float	ppx;
-	float	ppy;
+	uint8_t	ppx;
+	uint8_t	ppy;
 } win;
 
 typedef struct chip8 {
