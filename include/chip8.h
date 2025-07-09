@@ -8,8 +8,8 @@
 #include <pthread.h>
 #include <SDL3/SDL.h>
 
-#define DEF_WIN_WIDTH 1024
-#define DEF_WIN_HEIGHT 512
+#define DEF_WIN_WIDTH 1280 
+#define DEF_WIN_HEIGHT 640 
 #define MIN_WIN_WIDTH 200
 #define MIN_WIN_HEIGHT 100
 #define RAM_SIZE 0x1000 
