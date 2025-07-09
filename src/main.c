@@ -264,7 +264,9 @@ void draw_routine(void *p) {
 	SDL_Event event;
 	uint32_t pIndex;
 	bool screen_on = true;
+	printf("before attempt: %u\n", win->win_height*win->win_width);
 	SDL_FPoint points[win->win_height*win->win_width];
+	printf("after\n");
 	clock_gettime(CLOCK_MONOTONIC, &frame_start_time);
 	while (screen_on) {
 		pthread_mutex_lock(&worker->halt_mutex);
@@ -297,7 +299,7 @@ void draw_routine(void *p) {
 				}
 			}
 		if (pIndex) { 
-			draw_bg(worker->win, 0x000810ff);//fffcf2,252422,ccc5b,001219
+			draw_bg(worker->win, 0x101010ff);//000810,fffcf2,252422,ccc5b,001219
 			SDL_SetRenderDrawColor(worker->win->renderer, 0xff, 0xfc, 0xf2, 0xff);
 			SDL_RenderPoints(worker->win->renderer, points, pIndex);
 			SDL_RenderPresent(worker->win->renderer);
