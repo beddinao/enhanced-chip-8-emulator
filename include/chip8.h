@@ -8,44 +8,44 @@
 #include <pthread.h>
 #include <SDL3/SDL.h>
 
-#define DEF_WIN_WIDTH 1280 
-#define DEF_WIN_HEIGHT 640 
-#define MIN_WIN_WIDTH 200
-#define MIN_WIN_HEIGHT 100
 #define RAM_SIZE 0x1000 
 #define FONT_START 0x50
 #define PRG_LOAD 0x200
-#define NANOS_PER_SECOND 1000000000
+#define NANOS_PER_SECOND 0x3B9ACA00
 #define BGC 0xfffcf2ff
 #define FGC 0x252422ff
-#define INSTRUCTIONS_PER_SECOND 700 
+#define INSTRUCTIONS_PER_SECOND 0x2bc//700 
 #define NANOS_PER_INSTRUCTION NANOS_PER_SECOND/INSTRUCTIONS_PER_SECOND
-#define CYCLES_PER_SECOND 60 //hz
+#define CYCLES_PER_SECOND 0x3c//60hz
 #define NANOS_PER_CYCLE NANOS_PER_SECOND/CYCLES_PER_SECOND
 #define FPS 60
 #define NANOS_PER_FRAME NANOS_PER_SECOND/FPS
+#define DEF_WIN_WIDTH 0x500 
+#define DEF_WIN_HEIGHT 0x280 
+#define MIN_WIN_WIDTH 0xc8
+#define MIN_WIN_HEIGHT 0x64
 
 typedef struct graphic {
 	SDL_Window	*window;
 	SDL_Renderer	*renderer;
-	uint16_t	win_height;
-	uint16_t	win_width;
-	uint8_t	ppx;
-	uint8_t	ppy;
+	Uint16	win_height;
+	Uint16	win_width;
+	Uint8	ppx;
+	Uint8	ppy;
 } win;
 
 typedef struct chip8 {
-	uint16_t	pc;
-	uint16_t	ir;
-	uint8_t	sp;
-	uint8_t	delay_timer;
-	uint8_t	sound_timer;
+	Uint16	pc;
+	Uint16	ir;
+	Uint8	sp;
+	Uint8	delay_timer;
+	Uint8	sound_timer;
 
-	uint8_t	ram[RAM_SIZE];
-	uint8_t	display[32][64];
+	Uint8	ram[RAM_SIZE];
+	Uint8	display[32][64];
 	bool	keyboard[16];
-	uint8_t	regs[16];
-	uint16_t	stack[16];
+	Uint8	regs[16];
+	Uint16	stack[16];
 
 	void	(*_0s_[3])(struct chip8*);
 	void	(*_1_7s_[7])(struct chip8*);
@@ -54,8 +54,8 @@ typedef struct chip8 {
 	void	(*_es_[2])(struct chip8*);
 	void	(*_fs_[9])(struct chip8*);
 
-	uint16_t	opcode;
-	uint16_t	mem_ocu;
+	Uint16	opcode;
+	Uint16	mem_ocu;
 	int8_t	keypress;
 	bool	emu_on;
 } chip_8;
