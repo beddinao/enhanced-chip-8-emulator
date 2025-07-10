@@ -264,9 +264,7 @@ void draw_routine(void *p) {
 	SDL_Event event;
 	uint32_t pIndex;
 	bool screen_on = true;
-	printf("before attempt: %u\n", win->win_height*win->win_width);
 	SDL_FPoint points[win->win_height*win->win_width];
-	printf("after\n");
 	clock_gettime(CLOCK_MONOTONIC, &frame_start_time);
 	while (screen_on) {
 		pthread_mutex_lock(&worker->halt_mutex);
