@@ -18,7 +18,7 @@ void _8xy1(chip_8 *chip8) { chip8->regs[(chip8->opcode&0xf00)>>0x8] |= chip8->re
 void _8xy2(chip_8 *chip8) { chip8->regs[(chip8->opcode&0xf00)>>0x8] &= chip8->regs[(chip8->opcode&0xf0)>>0x4]; }
 void _8xy3(chip_8 *chip8) { chip8->regs[(chip8->opcode&0xf00)>>0x8] ^= chip8->regs[(chip8->opcode&0xf0)>>0x4]; }
 void _8xy4(chip_8 *chip8) {
-	uint16_t res = chip8->regs[(chip8->opcode&0xf00)>>0x8] + chip8->regs[(chip8->opcode&0xf0)>>0x4];
+	Uint16 res = chip8->regs[(chip8->opcode&0xf00)>>0x8] + chip8->regs[(chip8->opcode&0xf0)>>0x4];
 	chip8->regs[(chip8->opcode&0xf00)>>0x8] = res&0xff;
 	chip8->regs[0xf] = res > 0xff;
 }
@@ -28,7 +28,7 @@ void _8xy5(chip_8 *chip8) {
 	chip8->regs[0xf] = res >= 0;
 }
 void _8xy6(chip_8 *chip8) {
-	uint8_t old_vx = chip8->regs[(chip8->opcode&0xf00)>>0x8];
+	Uint8 old_vx = chip8->regs[(chip8->opcode&0xf00)>>0x8];
 	chip8->regs[(chip8->opcode&0xf00)>>0x8] >>= 0x1;
 	chip8->regs[0xf] = old_vx&0x1;
 }
@@ -37,7 +37,7 @@ void _8xy7(chip_8 *chip8) {
 	chip8->regs[0xf] = chip8->regs[(chip8->opcode&0xf0)>>0x4] > chip8->regs[(chip8->opcode&0xf00)>>0x8];
 }
 void _8xye(chip_8 *chip8) {
-	uint8_t tmp_vf = (chip8->regs[(chip8->opcode&0xf00)>>0x8] >> 0x7) & 0x1;
+	Uint8 tmp_vf = (chip8->regs[(chip8->opcode&0xf00)>>0x8] >> 0x7) & 0x1;
 	chip8->regs[(chip8->opcode&0xf00)>>0x8] <<= 0x1;
 	chip8->regs[0xf] = tmp_vf;
 }
@@ -48,13 +48,13 @@ void _cxnn(chip_8 *chip8) { chip8->regs[(chip8->opcode&0xf00)>>0x8] = (rand()%25
 void _dxyn(chip_8 *chip8) {
 	unsigned x = chip8->regs[(chip8->opcode&0xf00)>>0x8] % 64;
 	unsigned y = chip8->regs[(chip8->opcode&0xf0)>>0x4] % 32;
-	uint8_t sprite_pixel, sprite_byte, n = chip8->opcode&0xf;
-	uint8_t *display_pixel;
+	Uint8 sprite_pixel, sprite_byte, n = chip8->opcode&0xf;
+	Uint8 *display_pixel;
 	bool prv;
 	chip8->regs[0xf] = 0;
-	for (uint8_t row = 0; row < n && row+y < 32; row++) {
+	for (Uint8 row = 0; row < n && row+y < 32; row++) {
 		sprite_byte = chip8->ram[chip8->ir+row];
-		for (uint8_t col = 0; col < 8&&col+x<64; col++) {
+		for (Uint8 col = 0; col < 8&&col+x<64; col++) {
 			sprite_pixel = (sprite_byte>>(7-col))&0x1;
 			display_pixel = &chip8->display[y+row][x+col];
 			prv = *display_pixel;
@@ -82,8 +82,8 @@ void _fx33(chip_8 *chip8) {
 	chip8->ram[chip8->ir+1] = (chip8->regs[(chip8->opcode&0xf00)>>0x8]/10)%10;
 	chip8->ram[chip8->ir+2] = chip8->regs[(chip8->opcode&0xf00)>>0x8]%10;
 }
-void _fx55(chip_8 *chip8) { for (uint8_t reg = 0; reg <= (chip8->opcode&0xf00)>>0x8; reg++) chip8->ram[reg+chip8->ir] = chip8->regs[reg]; }
-void _fx65(chip_8 *chip8) { for (uint8_t reg = 0; reg <= (chip8->opcode&0xf00)>>0x8; reg++) chip8->regs[reg] = chip8->ram[reg+chip8->ir]; }
+void _fx55(chip_8 *chip8) { for (Uint8 reg = 0; reg <= (chip8->opcode&0xf00)>>0x8; reg++) chip8->ram[reg+chip8->ir] = chip8->regs[reg]; }
+void _fx65(chip_8 *chip8) { for (Uint8 reg = 0; reg <= (chip8->opcode&0xf00)>>0x8; reg++) chip8->regs[reg] = chip8->ram[reg+chip8->ir]; }
 
 void load_instructions(chip_8 *chip8) {
 	chip8->_0s_[0] = _0nnn; chip8->_0s_[1] = _00e0; chip8->_0s_[2] = _00ee;
@@ -102,7 +102,7 @@ void load_instructions(chip_8 *chip8) {
 }
 
 void load_fonts(chip_8 *chip8) {
-	uint8_t fonts[16*5] = {
+	Uint8 fonts[16*5] = {
 		0xf0, 0x90, 0x90, 0x90, 0xf0,
 		0x20, 0x60, 0x20, 0x20, 0x70,
 		0xf0, 0x10, 0xf0, 0x80, 0xf0,
@@ -247,7 +247,7 @@ void key_event_handle(worker_data *worker, SDL_Event*event, bool state) {
 		worker->chip8->keypress = -1;
 }
 
-void draw_bg(win *win, uint32_t color) {
+void draw_bg(win *win, Uint32 color) {
 	SDL_SetRenderDrawColor(win->renderer,
 		(color>>24)&0xff,
 		(color>>16)&0xff,
@@ -258,11 +258,11 @@ void draw_bg(win *win, uint32_t color) {
 
 void draw_routine(void *p) {
 	struct timespec frame_start_time, frame_end_time;
-	uint64_t elapsed_nanoseconds;
+	Uint64 elapsed_nanoseconds;
 	worker_data *worker = (worker_data*)p;
 	win *win = worker->win;
 	SDL_Event event;
-	uint32_t pIndex;
+	Uint32 pIndex;
 	bool screen_on = true;
 	SDL_FPoint points[win->win_height*win->win_width];
 	clock_gettime(CLOCK_MONOTONIC, &frame_start_time);
@@ -287,9 +287,9 @@ void draw_routine(void *p) {
 		if (elapsed_nanoseconds < NANOS_PER_FRAME)
 			continue;
 		else clock_gettime(CLOCK_MONOTONIC, &frame_start_time);
-		memset(&pIndex, 0, sizeof(uint32_t));
-		for (uint16_t y = 0; y < win->win_height; y++)
-			for (uint16_t x = 0; x < win->win_width; x++) { 
+		memset(&pIndex, 0, sizeof(Uint32));
+		for (Uint16 y = 0; y < win->win_height; y++)
+			for (Uint16 x = 0; x < win->win_width; x++) { 
 				if (((y%win->ppy) && (x%win->ppx))
 					&& worker->chip8->display[y/win->ppy][x/win->ppx]) {
 					points[pIndex].x = x;
@@ -310,7 +310,7 @@ void draw_routine(void *p) {
 
 void *timer_cycle(void *p) {
 	struct timespec cycle_start_time, cycle_end_time, sleep_time;
-	uint64_t elapsed_nanoseconds;
+	Uint64 elapsed_nanoseconds;
 	worker_data *worker = (worker_data*)p;
 	chip_8 *chip8 = worker->chip8;
 	memset(&cycle_start_time, 0, sizeof(struct timespec));
@@ -341,11 +341,11 @@ void *timer_cycle(void *p) {
 
 void *instruction_cycle(void *p) {
 	struct timespec frame_start_time, frame_end_time, sleep_time;
-	uint64_t elapsed_nanoseconds;
+	Uint64 elapsed_nanoseconds;
 	worker_data *worker = (worker_data*)p;
 	chip_8 *chip8 = worker->chip8;
 	chip8->emu_on = true;
-	uint8_t n;
+	Uint8 n;
 	memset(&frame_start_time, 0, sizeof(struct timespec));
 	memset(&frame_end_time, 0, sizeof(struct timespec));
 	memset(&sleep_time, 0, sizeof(struct timespec));
