@@ -205,7 +205,13 @@ bool load_prg(chip_8 *chip8, char *prg) {
 	return true;
 }
 
-chip_8 *init_chip8(char *prg) {
+bool load_prg(chip_8 *chip8, unsigned char prg[], unsigned int size) {
+	for (unsigned raw_addr=0; raw_addr <= size; raw_addr+=0x10) {
+		printf("$%04x($%04x): ", raw_addr, PRG_LOAD+chip8)
+	}
+}
+
+chip_8 *init_chip8() {
 	chip_8 *chip8 = malloc(sizeof(chip_8));
 	if (!chip8)
 		return NULL;
@@ -213,7 +219,7 @@ chip_8 *init_chip8(char *prg) {
 	load_fonts(chip8);
 	load_instructions(chip8);
 	chip8->pc = PRG_LOAD;
-	if (!load_prg(chip8, prg)) {
+	if (!load_prg(chip8)) {
 		printf("can't load program\n");
 		free(chip8);
 		return NULL;
@@ -395,7 +401,7 @@ void *sound_cycle(void *p) {
 			clock_gettime(CLOCK_MONOTONIC, &cycle_end_time);
 			elapsed_nanoseconds = (cycle_end_time.tv_sec-cycle_start_time.tv_sec)*NANOS_PER_SECOND
 				+ (cycle_end_time.tv_nsec-cycle_start_time.tv_nsec);
-			if (!elapsed_nanoseconds < NANOS_PER_CYCLE) {
+			if (elapsed_nanoseconds < NANOS_PER_CYCLE) {
 				sleep_time.tv_sec = 0;
 				sleep_time.tv_nsec = NANOS_PER_CYCLE - elapsed_nanoseconds;
 				nanosleep(&sleep_time, NULL);
@@ -484,11 +490,7 @@ void *instruction_cycle(void *p) {
 }
 
 int main(int c, char **v) {
-	if (c != 2) {
-		printf("usage: %s [program to execute]\n", v[0]);
-		return 1;
-	}
-	chip_8 *chip8 = init_chip8(v[1]);
+	chip_8 *chip8 = init_chip8();
 	if (!chip8)
 		return 1;
 	worker_data *worker = malloc(sizeof(worker_data));

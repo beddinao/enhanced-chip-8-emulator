@@ -7,6 +7,7 @@
 #include <unistd.h>
 #include <pthread.h>
 #include <SDL3/SDL.h>
+#include <emscripten/emscripten.h>
 
 
 #define RAM_SIZE 0x1000 
@@ -37,7 +38,6 @@ typedef struct graphic {
 	Uint16	win_height;
 	Uint16	win_width;
 	bool	sound_on;
-	bool	sound_off;
 	Uint8	ppx;
 	Uint8	ppy;
 } win;
