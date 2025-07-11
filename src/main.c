@@ -123,6 +123,20 @@ void load_fonts(chip_8 *chip8) {
 	memcpy(chip8->ram + FONT_START, fonts, sizeof(fonts));
 }
 
+bool init_audio(worker_data *worker) {
+	SDL_AudioSpec spec;
+	win *window = worker->win;
+	if (!SDL_LoadWAV(DEFAULT_BEEP, &spec, &window->audio_buf, &window->audio_len))
+		return false;
+	if (!(window->device = SDL_OpenAudioDevice(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, &spec)) ||
+		!(window->stream = SDL_CreateAudioStream(&spec, &spec)) )
+		return false;
+	SDL_PutAudioStreamData(window->stream, window->audio_buf, window->audio_len);
+	SDL_FlushAudioStream(window->stream);
+	SDL_BindAudioStream(window->device, window->stream);
+	return true;
+}
+
 bool init_window(worker_data *worker) {
 	worker->win = malloc(sizeof(win));
 	if (!worker->win)
@@ -133,7 +147,7 @@ bool init_window(worker_data *worker) {
 	worker->win->win_width = DEF_WIN_WIDTH;
 	worker->win->ppy = worker->win->win_height/32.0;
 	worker->win->ppx = worker->win->win_width/64.0;
-	if (!SDL_Init(SDL_INIT_EVENTS)) {
+	if (!SDL_Init(SDL_INIT_EVENTS|SDL_INIT_AUDIO)) {
 		free(worker->win);
 		return false;
 	}
@@ -326,8 +340,10 @@ void *timer_cycle(void *p) {
 		pthread_mutex_unlock(&worker->halt_mutex);
 		if (chip8->delay_timer)
 			chip8->delay_timer -= 1;
+		pthread_mutex_lock(&worker->sound_mutex);
 		if (chip8->sound_timer)
 			chip8->sound_timer -= 1;
+		pthread_mutex_unlock(&worker->sound_mutex);
 		clock_gettime(CLOCK_MONOTONIC, &cycle_end_time);
 		elapsed_nanoseconds = (cycle_end_time.tv_sec - cycle_start_time.tv_sec)*NANOS_PER_SECOND
 			+ (cycle_end_time.tv_nsec-cycle_start_time.tv_nsec);
@@ -337,6 +353,55 @@ void *timer_cycle(void *p) {
 			nanosleep(&sleep_time, NULL);
 		}
 	}	
+}
+
+void *sound_cycle(void *p) {
+	worker_data *worker = (worker_data*)p;
+	win *window = worker->win;
+	struct timespec cycle_start_time,
+		cycle_end_time, sleep_time;
+	Uint64 elapsed_nanoseconds;
+	memset(&cycle_start_time, 0, sizeof(struct timespec));
+	memset(&cycle_end_time, 0, sizeof(struct timespec));
+	memset(&sleep_time, 0, sizeof(struct timespec));
+	if (!init_audio(worker)) {
+		printf("failure(%s), continuing without audio\n",
+			SDL_GetError());
+		window->stream = NULL;
+	}	
+	else
+		while (true) {
+			clock_gettime(CLOCK_MONOTONIC, &cycle_start_time);
+			pthread_mutex_lock(&worker->halt_mutex);
+			if (worker->halt) {
+				pthread_mutex_unlock(&worker->halt_mutex);
+				return NULL;
+			}
+			pthread_mutex_unlock(&worker->halt_mutex);
+			pthread_mutex_lock(&worker->sound_mutex);
+			if (!worker->chip8->sound_timer && window->sound_on) {
+				SDL_PauseAudioDevice(window->device);
+				SDL_ClearAudioStream(window->stream);
+				SDL_PutAudioStreamData(window->stream, window->audio_buf,
+					window->audio_len);
+				SDL_FlushAudioStream(window->stream);
+				window->sound_on = false;
+			}
+			else if (worker->chip8->sound_timer && !window->sound_on) {
+				SDL_ResumeAudioDevice(window->device);
+				window->sound_on = true;
+			}
+			pthread_mutex_unlock(&worker->sound_mutex);
+			clock_gettime(CLOCK_MONOTONIC, &cycle_end_time);
+			elapsed_nanoseconds = (cycle_end_time.tv_sec-cycle_start_time.tv_sec)*NANOS_PER_SECOND
+				+ (cycle_end_time.tv_nsec-cycle_start_time.tv_nsec);
+			if (!elapsed_nanoseconds < NANOS_PER_CYCLE) {
+				sleep_time.tv_sec = 0;
+				sleep_time.tv_nsec = NANOS_PER_CYCLE - elapsed_nanoseconds;
+				nanosleep(&sleep_time, NULL);
+			}
+		}
+	return NULL;
 }
 
 void *instruction_cycle(void *p) {
@@ -441,18 +506,21 @@ int main(int c, char **v) {
 	}
 	srand(time(NULL));
 	pthread_mutex_init(&worker->halt_mutex, NULL);
-	pthread_mutex_init(&worker->prg_mutex, NULL);
-	pthread_mutex_init(&worker->iop_mutex, NULL);
+	pthread_mutex_init(&worker->sound_mutex, NULL);
 	pthread_create(&worker->worker, NULL, instruction_cycle, worker);
 	pthread_create(&worker->clock_worker, NULL, timer_cycle, worker);
+	pthread_create(&worker->sound_worker, NULL, sound_cycle, worker);
 	draw_routine(worker);
 	pthread_join(worker->worker, NULL);
 	pthread_join(worker->clock_worker, NULL);
+	pthread_join(worker->sound_worker, NULL);
 	pthread_mutex_destroy(&worker->halt_mutex);
-	pthread_mutex_destroy(&worker->prg_mutex);
-	pthread_mutex_destroy(&worker->iop_mutex);
+	pthread_mutex_destroy(&worker->sound_mutex);
+	SDL_DestroyAudioStream(worker->win->stream);
+	SDL_CloseAudioDevice(worker->win->device);
 	SDL_DestroyRenderer(worker->win->renderer);
 	SDL_DestroyWindow(worker->win->window);
+	SDL_free(worker->win->audio_buf);
 	SDL_Quit();
 	free(worker->win);
 	free(worker);
