@@ -4,7 +4,7 @@
 <a href="https://en.wikipedia.org/wiki/CHIP-8">CHIP-8</a> - <a href="https://www.libsdl.org/">SDL</a>
 
 ```
-• 60Fps 64x32 pixel monochrome display (~16666667 nanoseconds per frame).
+• 60Fps 64x32 pixel monochrome display.
 • 4K 8-bit RAM.
 • 16 8-bit registers (V0–VF).
 • 16-bit PC - program counter
