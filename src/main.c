@@ -123,6 +123,7 @@ void load_fonts(chip_8 *chip8) {
 	memcpy(chip8->ram + FONT_START, fonts, sizeof(fonts));
 }
 
+/*
 bool init_audio(worker_data *worker) {
 	SDL_AudioSpec spec;
 	win *window = worker->win;
@@ -136,6 +137,7 @@ bool init_audio(worker_data *worker) {
 	SDL_BindAudioStream(window->device, window->stream);
 	return true;
 }
+*/
 
 bool init_window(worker_data *worker) {
 	worker->win = malloc(sizeof(win));
@@ -147,15 +149,15 @@ bool init_window(worker_data *worker) {
 	worker->win->win_width = DEF_WIN_WIDTH;
 	worker->win->ppy = worker->win->win_height/32.0;
 	worker->win->ppx = worker->win->win_width/64.0;
-	if (!SDL_Init(SDL_INIT_EVENTS|SDL_INIT_AUDIO)) {
+	if (SDL_Init(SDL_INIT_EVENTS/*|SDL_INIT_AUDIO*/) < 0) {
 		free(worker->win);
 		return false;
 	}
-	win = SDL_CreateWindow("chip-8 emu",
+	win = SDL_CreateWindow("chip-8 emu", 0, 0,
 		worker->win->win_width,
 		worker->win->win_height,
 		/*SDL_WINDOW_RESIZABLE*/0);
-	renderer = SDL_CreateRenderer(win, NULL);
+	renderer = SDL_CreateRenderer(win, -1, 0);
 	if (!win || !renderer) {
 		if (win) SDL_DestroyWindow(win);
 		free(worker->win);
@@ -223,7 +225,7 @@ chip_8 *init_chip8(char *prg) {
 
 void key_event_handle(worker_data *worker, SDL_Event*event, bool state) {
 	bool *keys = worker->chip8->keyboard;
-	SDL_Keycode key = event->key.key;
+	SDL_Keycode key = event->key.keysym.sym;
 
 	switch (key) {
 		case SDLK_KP_0: key = SDLK_0; break;
@@ -249,12 +251,12 @@ void key_event_handle(worker_data *worker, SDL_Event*event, bool state) {
 		case SDLK_7: keys[0x7] = state; worker->chip8->keypress = 0x7; break;
 		case SDLK_8: keys[0x8] = state; worker->chip8->keypress = 0x8; break;
 		case SDLK_9: keys[0x9] = state; worker->chip8->keypress = 0x9; break;
-		case SDLK_A: keys[0xa] = state; worker->chip8->keypress = 0xa; break;
-		case SDLK_B: keys[0xb] = state; worker->chip8->keypress = 0xb; break;
-		case SDLK_C: keys[0xc] = state; worker->chip8->keypress = 0xc; break;
-		case SDLK_D: keys[0xd] = state; worker->chip8->keypress = 0xd; break;
-		case SDLK_E: keys[0xe] = state; worker->chip8->keypress = 0xe; break;
-		case SDLK_F: keys[0xf] = state; worker->chip8->keypress = 0xf; break;
+		case SDLK_KP_A: keys[0xa] = state; worker->chip8->keypress = 0xa; break;
+		case SDLK_KP_B: keys[0xb] = state; worker->chip8->keypress = 0xb; break;
+		case SDLK_KP_C: keys[0xc] = state; worker->chip8->keypress = 0xc; break;
+		case SDLK_KP_D: keys[0xd] = state; worker->chip8->keypress = 0xd; break;
+		case SDLK_KP_E: keys[0xe] = state; worker->chip8->keypress = 0xe; break;
+		case SDLK_KP_F: keys[0xf] = state; worker->chip8->keypress = 0xf; break;
 		default: return;
 	}
 	if (!state)
@@ -289,9 +291,9 @@ void draw_routine(void *p) {
 		pthread_mutex_unlock(&worker->halt_mutex);
 		if (SDL_PollEvent(&event)) {
 			switch(event.type) {
-				case SDL_EVENT_QUIT: screen_on = false; break;
-				case SDL_EVENT_KEY_DOWN: key_event_handle(worker, &event, 1); break;
-				case SDL_EVENT_KEY_UP: key_event_handle(worker, &event, 0); break;
+				case SDL_QUIT: screen_on = false; break;
+				case SDL_KEYDOWN: key_event_handle(worker, &event, 1); break;
+				case SDL_KEYUP: key_event_handle(worker, &event, 0); break;
 				default:	break;
 			}
 		}
@@ -313,7 +315,7 @@ void draw_routine(void *p) {
 		if (pIndex) { 
 			draw_bg(worker->win, 0x101010ff);//000810,fffcf2,252422,ccc5b,001219
 			SDL_SetRenderDrawColor(worker->win->renderer, 0xff, 0xfc, 0xf2, 0xff);
-			SDL_RenderPoints(worker->win->renderer, points, pIndex);
+			SDL_RenderDrawPointsF(worker->win->renderer, points, pIndex);
 			SDL_RenderPresent(worker->win->renderer);
 		}
 	}
@@ -340,10 +342,10 @@ void *timer_cycle(void *p) {
 		pthread_mutex_unlock(&worker->halt_mutex);
 		if (chip8->delay_timer)
 			chip8->delay_timer -= 1;
-		pthread_mutex_lock(&worker->sound_mutex);
+		//pthread_mutex_lock(&worker->sound_mutex);
 		if (chip8->sound_timer)
 			chip8->sound_timer -= 1;
-		pthread_mutex_unlock(&worker->sound_mutex);
+		//pthread_mutex_unlock(&worker->sound_mutex);
 		clock_gettime(CLOCK_MONOTONIC, &cycle_end_time);
 		elapsed_nanoseconds = (cycle_end_time.tv_sec - cycle_start_time.tv_sec)*NANOS_PER_SECOND
 			+ (cycle_end_time.tv_nsec-cycle_start_time.tv_nsec);
@@ -355,6 +357,7 @@ void *timer_cycle(void *p) {
 	}	
 }
 
+/*
 void *sound_cycle(void *p) {
 	worker_data *worker = (worker_data*)p;
 	win *window = worker->win;
@@ -403,6 +406,7 @@ void *sound_cycle(void *p) {
 		}
 	return NULL;
 }
+*/
 
 void *instruction_cycle(void *p) {
 	struct timespec frame_start_time, frame_end_time, sleep_time;
@@ -499,28 +503,28 @@ int main(int c, char **v) {
 	memset(worker, 0, sizeof(worker_data));
 	worker->chip8 = chip8;
 	if (!init_window(worker)) {
-		printf("failed to initiate sdl window\n");
+		printf("failed to initiate sdl window [%s]\n", SDL_GetError());
 		free(worker);
 		free(chip8);
 		return 1;
 	}
 	srand(time(NULL));
 	pthread_mutex_init(&worker->halt_mutex, NULL);
-	pthread_mutex_init(&worker->sound_mutex, NULL);
+	//pthread_mutex_init(&worker->sound_mutex, NULL);
 	pthread_create(&worker->worker, NULL, instruction_cycle, worker);
 	pthread_create(&worker->clock_worker, NULL, timer_cycle, worker);
-	pthread_create(&worker->sound_worker, NULL, sound_cycle, worker);
+	//pthread_create(&worker->sound_worker, NULL, sound_cycle, worker);
 	draw_routine(worker);
 	pthread_join(worker->worker, NULL);
 	pthread_join(worker->clock_worker, NULL);
-	pthread_join(worker->sound_worker, NULL);
+	//pthread_join(worker->sound_worker, NULL);
 	pthread_mutex_destroy(&worker->halt_mutex);
-	pthread_mutex_destroy(&worker->sound_mutex);
-	SDL_DestroyAudioStream(worker->win->stream);
-	SDL_CloseAudioDevice(worker->win->device);
+	//pthread_mutex_destroy(&worker->sound_mutex);
+	//SDL_DestroyAudioStream(worker->win->stream);
+	//SDL_CloseAudioDevice(worker->win->device);
 	SDL_DestroyRenderer(worker->win->renderer);
 	SDL_DestroyWindow(worker->win->window);
-	SDL_free(worker->win->audio_buf);
+	//SDL_free(worker->win->audio_buf);
 	SDL_Quit();
 	free(worker->win);
 	free(worker);

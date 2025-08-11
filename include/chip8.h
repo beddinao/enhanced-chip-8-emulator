@@ -6,8 +6,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <pthread.h>
-#include <SDL3/SDL.h>
-
+#include <SDL2/SDL.h>
 
 #define RAM_SIZE 0x1000 
 #define FONT_START 0x50
@@ -27,17 +26,26 @@
 #define MIN_WIN_HEIGHT 0x64
 #define DEFAULT_BEEP "audio/beep.wav"
 
+#ifndef false
+#define false 0
+#endif
+#ifndef true
+#define true 1
+#endif
+
+typedef int bool;
+
 typedef struct graphic {
 	SDL_Window	*window;
 	SDL_Renderer	*renderer;
-	SDL_AudioDeviceID	device;
-	SDL_AudioStream	*stream;
-	Uint8	*audio_buf;
-	Uint32	audio_len;
+	//SDL_AudioDeviceID	device;
+	//SDL_AudioStream	*stream;
+	//Uint8	*audio_buf;
+	//Uint32	audio_len;
 	Uint16	win_height;
 	Uint16	win_width;
-	bool	sound_on;
-	bool	sound_off;
+	//bool	sound_on;
+	//bool	sound_off;
 	Uint8	ppx;
 	Uint8	ppy;
 } win;
@@ -72,9 +80,9 @@ typedef struct worker {
 	bool	halt;
 	pthread_t	worker;
 	pthread_t	clock_worker;
-	pthread_t sound_worker;
+	//pthread_t sound_worker;
 	pthread_mutex_t	halt_mutex;
-	pthread_mutex_t	sound_mutex;
+	//pthread_mutex_t	sound_mutex;
 	win	*win;
 	chip_8	*chip8;
 } worker_data;
