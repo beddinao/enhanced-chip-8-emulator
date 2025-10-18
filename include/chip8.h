@@ -36,6 +36,7 @@ typedef struct graphic {
 	Uint32	audio_len;
 	Uint16	win_height;
 	Uint16	win_width;
+	bool	audio;
 	bool	sound_on;
 	bool	sound_off;
 	Uint8	ppx;
