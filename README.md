@@ -1,9 +1,10 @@
 
 # *`enhanced-chip-8-emulator`*
 
-<a href="https://en.wikipedia.org/wiki/CHIP-8">CHIP-8</a> - <a href="https://www.libsdl.org/">SDL</a>
+<a href="https://en.wikipedia.org/wiki/CHIP-8">CHIP-8</a>
 
 ```
+
 • 60Fps 64x32 pixel monochrome display.
 • 4K 8-bit RAM.
 • 16 8-bit registers (V0–VF).
@@ -17,4 +18,5 @@
   4 5 6 D
   7 8 9 E
   A 0 B F
+
 ```
